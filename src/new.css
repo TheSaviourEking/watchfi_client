@@ -1,0 +1,186 @@
+/* Apple-style smooth scrolling and base styles */
+html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+}
+
+body {
+    overflow-x: hidden;
+    /* Prevent horizontal scroll during animations */
+}
+
+/* Section spacing for Apple-like rhythm */
+.section {
+    scroll-snap-align: start;
+    padding: clamp(60px, 8vw, 120px) 0;
+    /* Responsive spacing like Apple */
+    will-change: transform, opacity;
+    /* Optimize for animations */
+}
+
+/* Subtle backdrop blur effect during animations (optional) */
+@supports (backdrop-filter: blur()) {
+    .section {
+        backdrop-filter: blur(0px);
+        transition: backdrop-filter 0.3s ease;
+    }
+
+    .section:hover {
+        backdrop-filter: blur(0.5px);
+    }
+}
+
+/* Apple-style reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Enhanced focus states for accessibility (Apple-style) */
+*:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* Container max-width and centering like Apple */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 40px);
+}
+
+/* Apple-style section backgrounds with subtle gradients */
+.hero-section {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.authenticity-section {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+}
+
+.payment-section {
+    background: linear-gradient(135deg, #ffeef8 0%, #f0f4ff 100%);
+}
+
+.provenance-section {
+    background: linear-gradient(135deg, #f0ffff 0%, #e6f3ff 100%);
+}
+
+.picks-section {
+    background: linear-gradient(135deg, #fff5f0 0%, #f0f8ff 100%);
+}
+
+.brands-section {
+    background: linear-gradient(135deg, #f8fff0 0%, #e8f5ff 100%);
+}
+
+.banner-section {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+    color: white;
+}
+
+/* Apple-style typography rhythm */
+h1,
+h2,
+h3 {
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    /* Apple's tight letter spacing */
+}
+
+h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: 1.5rem;
+}
+
+h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 1.25rem;
+}
+
+h3 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin-bottom: 1rem;
+}
+
+/* Apple-style button animations */
+.button {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateY(0);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+    transform: translateY(0);
+    transition-duration: 0.1s;
+}
+
+/* Performance optimizations */
+.section img {
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Smooth entrance for dynamic content */
+.fade-in-content {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: contentFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation-delay: 0.2s;
+}
+
+@keyframes contentFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Apple-style loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Ultra-smooth scroll for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+    background-clip: content-box;
+}

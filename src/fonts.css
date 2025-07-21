@@ -1,0 +1,116 @@
+/**
+* @license
+*
+* Font Family: Clash Grotesk
+* Designed by: Indian Type Foundry
+* URL: https://www.fontshare.com/fonts/clash-grotesk
+* © 2025 Indian Type Foundry
+*/
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Extralight.eot');
+    /* IE9 Compat Modes */
+    src: url('/fonts/ClashGrotesk-Extralight.eot?#iefix') format('embedded-opentype'),
+        /* IE6-IE8 */
+        url('/fonts/ClashGrotesk-Extralight.woff2') format('woff2'),
+        /* Modern Browsers */
+        url('/fonts/ClashGrotesk-Extralight.woff') format('woff'),
+        /* Pretty Modern Browsers */
+        url('/fonts/ClashGrotesk-Extralight.ttf') format('truetype');
+    /* Safari, Android, iOS */
+    font-weight: 200;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Light.eot');
+    src: url('/fonts/ClashGrotesk-Light.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Light.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Light.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Regular.eot');
+    src: url('/fonts/ClashGrotesk-Regular.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Regular.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Regular.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Medium.eot');
+    src: url('/fonts/ClashGrotesk-Medium.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Medium.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Medium.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Semibold.eot');
+    src: url('/fonts/ClashGrotesk-Semibold.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Semibold.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Semibold.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Semibold.ttf') format('truetype');
+    font-weight: 600;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Grotesk';
+    src: url('/fonts/ClashGrotesk-Bold.eot');
+    src: url('/fonts/ClashGrotesk-Bold.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Bold.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Bold.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+/* Variable font version (recommended for modern browsers) */
+@font-face {
+    font-family: 'Clash Grotesk Variable';
+    src: url('/fonts/ClashGrotesk-Variable.eot');
+    src: url('/fonts/ClashGrotesk-Variable.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/ClashGrotesk-Variable.woff2') format('woff2'),
+        url('/fonts/ClashGrotesk-Variable.woff') format('woff'),
+        url('/fonts/ClashGrotesk-Variable.ttf') format('truetype');
+    font-weight: 200 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+/* CSS Custom Properties for easier weight management */
+:root {
+    --font-clash-extralight: 'Clash Grotesk', sans-serif;
+    --font-clash-light: 'Clash Grotesk', sans-serif;
+    --font-clash-regular: 'Clash Grotesk', sans-serif;
+    --font-clash-medium: 'Clash Grotesk', sans-serif;
+    --font-clash-semibold: 'Clash Grotesk', sans-serif;
+    --font-clash-bold: 'Clash Grotesk', sans-serif;
+    --font-clash-variable: 'Clash Grotesk Variable', sans-serif;
+
+    --weight-extralight: 200;
+    --weight-light: 300;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+}
