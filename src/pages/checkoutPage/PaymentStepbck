@@ -1,0 +1,424 @@
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { useCheckout } from '@/hooks/useCheckout'
+import { CITIES, COUNTRIES, PRODUCT_DATA } from '@/lib/constants';
+
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { createTransferInstruction, getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import axios from 'axios';
+
+const PaymentStep = ({ cart, totalPrice }) => {
+    // const [paymentMethod, setPaymentMethod] = useState(JSON.parse(localStorage.getItem('checkout-data')).paymentMethod);
+
+    const { connection } = useConnection();
+    const { publicKey, signTransaction } = useWallet();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('SOL');
+    const [userTokenAccounts, setUserTokenAccounts] = useState({ SOL: 0, USDC: 0 });
+
+    const [prices, setPrices] = useState({ SOL: 0, USDC: 0 });
+
+    const BUSINESS_WALLET = new PublicKey(import.meta.env.VITE_BUSINESS_WALLET_ADDRESS);
+    const USDC_MINT = new PublicKey(
+        import.meta.env.VITE_SOLANA_NETWORK === 'devnet'
+            ? '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'
+            : 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+    );
+
+    useEffect(() => {
+        window.alert('we here')
+        console.log(cart, 'CART')
+    }, [])
+
+    useEffect(() => {
+        const getUserBalances = async () => {
+            if (!publicKey) return;
+            try {
+                const solBalance = await connection.getBalance(publicKey);
+                let usdcBalance = 0;
+                try {
+                    const usdcTokenAccount = await getAssociatedTokenAddress(USDC_MINT, publicKey);
+                    const accountInfo = await getAccount(connection, usdcTokenAccount);
+                    usdcBalance = Number(accountInfo.amount) / 1000000; // USDC has 6 decimals
+                } catch (error) {
+                    // User doesn't have USDC account
+                }
+                setUserTokenAccounts({ SOL: solBalance / LAMPORTS_PER_SOL, USDC: usdcBalance });
+            } catch (error) {
+                console.error('Error fetching balances:', error);
+                setPaymentStatus('Failed to fetch wallet balances.');
+            }
+        };
+        getUserBalances();
+    }, [publicKey, connection]);
+
+    useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd');
+                const data = await response.data;
+                setPrices({ SOL: data.solana.usd, USDC: data['usd-coin'].usd });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+                setPrices({ SOL: 100, USDC: 1 }); // Fallback prices
+                setPaymentStatus('Failed to fetch price data. Using fallback prices.');
+            }
+        };
+        fetchPrices();
+    }, []);
+
+    const calculateOrder = () => {
+        // const usdValue = cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+        const usdValue = totalPrice;
+        return {
+            usdValue,
+            solAmount: prices.SOL ? usdValue / prices.SOL : 0,
+            usdcAmount: prices.USDC ? usdValue / prices.USDC : 0,
+        };
+    };
+
+    const handlePayment = async () => {
+        if (!publicKey) {
+            setPaymentStatus('Please connect your wallet.');
+            return;
+        }
+
+        const orderData = calculateOrder();
+        // const orderData = {
+        //     usdValue: 455,
+        //     solAmount: 455 * 2,
+        //     usdcAmount: 455 * 7
+        // }
+        const requiredBalance = paymentMethod === 'SOL' ? orderData.solAmount : orderData.usdcAmount;
+        const userBalance = userTokenAccounts[paymentMethod] || 0;
+
+        if (userBalance < requiredBalance) {
+            setPaymentStatus(`Insufficient ${paymentMethod} balance. Required: ${requiredBalance.toFixed(6)}, Available: ${userBalance.toFixed(6)}`);
+            return;
+        }
+
+        setIsProcessing(true);
+        setPaymentStatus('Creating booking...');
+
+        try {
+            // Update customer wallet address
+            await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/customers/${customerId}/wallet`, {
+                walletAddress: publicKey.toBase58(),
+            });
+
+            // Create booking
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/bookings`, {
+                customerId,
+                watchItems: cartItems.map(item => ({ watchId: item.watchId, quantity: item.quantity })),
+                discount: 0,
+                shipmentAddress,
+                walletAddress: publicKey.toBase58(),
+            });
+
+            const { transaction: serializedTx, bookingId } = response.data;
+
+            // Deserialize and sign transaction
+            const transaction = Transaction.from(Buffer.from(serializedTx, 'base64'));
+            if (paymentMethod === 'USDC') {
+                const userUSDCAccount = await getAssociatedTokenAddress(USDC_MINT, publicKey);
+                const businessUSDCAccount = await getAssociatedTokenAddress(USDC_MINT, BUSINESS_WALLET);
+                transaction.add(
+                    createTransferInstruction(
+                        userUSDCAccount,
+                        businessUSDCAccount,
+                        publicKey,
+                        Math.round(orderData.usdcAmount * 1000000), // USDC has 6 decimals
+                        [],
+                        TOKEN_PROGRAM_ID
+                    )
+                );
+            }
+            const signedTx = await signTransaction(transaction);
+
+            // Verify transaction
+            setPaymentStatus('Confirming transaction...');
+            const verifyResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/bookings/verify`, {
+                bookingId,
+                signedTx: signedTx.serialize().toString('base64'),
+            });
+
+            setPaymentStatus(`Payment successful! Signature: ${verifyResponse.data.signature}`);
+        } catch (error) {
+            console.error('Payment failed:', error);
+            setPaymentStatus(`Payment failed: ${error.response?.data?.error || error.message}`);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const orderData = calculateOrder();
+    // const orderData = {
+    //     usdValue: 455,
+    //     solAmount: 455 * 2,
+    //     usdcAmount: 455 * 7
+    // }
+
+    return (
+        // <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 grid-rows-3 grid-flow-col">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 grid-flow-col">
+            <div className='row-span-full'>
+                {/* {paymentMethod === 'card' ? (
+                    <CardForm />
+                ) : (
+                    <CryptoForm />
+                )} */}
+                <CryptoForm orderData={orderData} publicKey={publicKey} paymentMethod={paymentMethod} userTokenAccounts={userTokenAccounts}
+                    isProcessing={isProcessing} paymentStatus={paymentStatus} setPaymentMethod={setPaymentMethod}
+                    cart={cart} prices={prices}
+                    totalPrice={totalPrice}
+                />
+            </div>
+
+            <div className="row-span-1">
+                <OrderSummary paymentMethod={paymentMethod} handlePayment={handlePayment} totalPrice={totalPrice} />
+            </div>
+        </div>
+    )
+}
+
+export default PaymentStep;
+
+// const CardForm = () => {
+//     const { billingData, setBillingData } = useCheckout();
+
+//     const handleInputChange = (field, value) => {
+//         setBillingData({ [field]: value });
+//     };
+//     return (
+//         <div className="bg-near-black p-6">
+
+//             <form className="space-y-4">
+//                 <div className="grid grid-cols-2 gap-4">
+//                     <div>
+//                         <label className="block text-sm text-gray-300 mb-2">
+//                             Full Name (as displayed on card)*
+//                         </label>
+//                         <input
+//                             type="text"
+//                             value={billingData.name}
+//                             onChange={(e) => handleInputChange('name', e.target.value)}
+//                             placeholder="Bonnie Green"
+//                             className="w-full bg-transparent border-b border-gray-600 py-2 px-0 text-white placeholder-gray-500 focus:border-white focus:outline-none"
+//                         />
+//                     </div>
+
+//                     <div>
+//                         <label className="block text-sm text-gray-300 mb-2">
+//                             Card Number*
+//                         </label>
+//                         <div className="flex">
+//                             <div className="flex items-center bg-transparent border-b border-gray-600 py-2 px-3 mr-2">
+//                                 <span className="text-sm mr-2">🇺🇸</span>
+//                                 <span className="text-sm">+1</span>
+//                             </div>
+//                             <input
+//                                 type="tel"
+//                                 value={billingData.phone}
+//                                 onChange={(e) => handleInputChange('phone', e.target.value)}
+//                                 placeholder="123 456 7890"
+//                                 className="flex-1 bg-transparent border-b border-gray-600 py-2 px-0 text-white placeholder-gray-500 focus:border-white focus:outline-none"
+//                             />
+//                         </div>
+//                     </div>
+//                 </div>
+
+//                 <div className="grid grid-cols-2 gap-4">
+//                     <div>
+//                         <label className="block text-sm text-gray-300 mb-2">
+//                             CVC *
+//                         </label>
+//                         <select
+//                             value={billingData.country}
+//                             onChange={(e) => handleInputChange('country', e.target.value)}
+//                             className="w-full bg-transparent border-b border-slate-600 py-2 px-3 text-white focus:border-white focus:outline-none"
+//                         >
+//                             {COUNTRIES.map(country => (
+//                                 <option key={country.value} value={country.value}>
+//                                     {country.label}
+//                                 </option>
+//                             ))}
+//                         </select>
+//                     </div>
+
+//                     <div>
+//                         <label className="block text-sm text-gray-300 mb-2">
+//                             Expiry Date*
+//                         </label>
+//                         <select
+//                             value={billingData.city}
+//                             onChange={(e) => handleInputChange('city', e.target.value)}
+//                             className="w-full bg-transparent border-b border-slate-600 py-2 px-3 text-white focus:border-white focus:outline-none"
+//                         >
+//                             <option value="">Select city</option>
+//                             {CITIES[billingData.country]?.map(city => (
+//                                 <option key={city} value={city}>
+//                                     {city}
+//                                 </option>
+//                             ))}
+//                         </select>
+//                     </div>
+//                 </div>
+
+//                 <Button type='submit' className='w-full'>
+//                     Buy Now
+//                 </Button>
+//             </form>
+//         </div>
+//     )
+// }
+
+const CryptoForm = ({ orderData, publicKey, paymentMethod, userTokenAccounts, handlePayment,
+    isProcessing, paymentStatus, setPaymentMethod, cart, prices, totalPrice
+
+}) => {
+    const { billingData, setBillingData } = useCheckout();
+
+
+    // const handleInputChange = (field, value) => {
+    //     setBillingData({ [field]: value });
+    // };
+
+
+    const handlePaymentMethodChange = (value) => {
+        console.log(value, 'value')
+        setPaymentMethod(value.toUpperCase())
+    }
+
+    console.log(orderData, 'orderData', paymentMethod, 'Payment Method', userTokenAccounts, 'USer Accounts', publicKey, 'PUblic key', prices, 'PRICES')
+
+
+    return (
+        <>
+            <div className="bg-near-black p-6">
+
+                <form className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                                Connect Wallet *
+                            </label>
+                            <WalletMultiButton />
+                            {/* <select
+                                value={billingData.country}
+                                onChange={(e) => handleInputChange('country', e.target.value)}
+                                className="w-full bg-transparent border-b border-slate-600 py-2 px-3 text-white focus:border-white focus:outline-none"
+                            >
+                                {COUNTRIES.map(country => (
+                                    <option key={country.value} value={country.value}>
+                                        {country.label}
+                                    </option>
+                                ))}
+                            </select> */}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                                Select Token*
+                            </label>
+                            <select
+                                // value={billingData.city}
+                                value={prices.SOL}
+                                // onChange={(e) => handleInputChange('city', e.target.value)}
+                                onChange={(e) => handlePaymentMethodChange(e.target.value)}
+                                className="w-full bg-transparent border-b border-slate-600 py-2 px-3 text-white focus:border-white focus:outline-none"
+                            >
+                                {/* <option value="">Select city</option> */}
+                                <option value="">{paymentMethod}</option>
+                                {/* {CITIES[billingData.country]?.map(city => ( */}
+                                {['SOL', 'USDC']?.map(city => (
+                                    <option key={city} value={city}>
+                                        {city}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                                Amount*
+                            </label>
+                            {/* <input
+                                type="text"
+                                value={billingData.name}
+                                onChange={(e) => handleInputChange('name', e.target.value)}
+                                placeholder="000"
+                                className="w-full bg-transparent border-b border-gray-600 py-2 px-0 text-white placeholder-gray-500 focus:border-white focus:outline-none"
+                            /> */}
+                            <span>{paymentMethod === 'SOL' ? orderData.solAmount : orderData.usdcAmount}</span>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                                USDC value*
+                            </label>
+                            <p className='py-2 px-0'>{orderData.solAmount}</p>
+                            {/* <div className="flex">
+                                <input
+                                    type="tel"
+                                    value={billingData.phone}
+                                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                                    placeholder="123 456 7890"
+                                    className="flex-1 bg-transparent border-b border-gray-600 py-2 px-0 text-white placeholder-gray-500 focus:border-white focus:outline-none"
+                                />
+                            </div> */}
+                        </div>
+                    </div>
+
+                    <Button type='submit' className='w-full'>
+                        Buy Now
+                    </Button>
+                </form>
+            </div>
+        </>
+    )
+}
+
+const OrderSummary = ({ paymentMethod, totalPrice }) => {
+    const SUPPORTED_CARDS = ['visa', 'mastercard', 'amex'];
+
+    return (
+        <div className="text-white w-full">
+
+            <div className="space-y-4 mb-6 bg-near-black p-6 ">
+                <div className="flex justify-between">
+                    <span className="text-gray-300">Original price</span>
+                    {/* <span>${PRODUCT_DATA.price.toLocaleString()}</span> */}
+                    <span>${totalPrice}</span>
+                </div>
+
+                <div className="flex justify-between">
+                    <span className="text-gray-300">Savings</span>
+                    <span>0</span>
+                </div>
+
+                <div className="border-t border-gray-600 pt-4">
+                    <div className="flex justify-between font-medium text-lg">
+                        <span>Total</span>
+                        {/* <span>${PRODUCT_DATA.price.toLocaleString()}</span> */}
+                        <span>${totalPrice}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* {
+                paymentMethod === 'card' && (
+                    <div className='flex items-center gap-4 justify-center px-6'>
+                        {SUPPORTED_CARDS.map((card, index) => (
+                            <span key={index}>{card}</span>
+                        ))}
+                    </div>
+                )
+            } */}
+        </div>
+    )
+}
