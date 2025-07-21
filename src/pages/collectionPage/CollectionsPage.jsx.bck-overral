@@ -1,0 +1,501 @@
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useSearchParams, useParams } from 'react-router'
+import HeroText from '../../components/HeroText'
+import api from '../../config/apiConfig'
+import { Card } from '../../components/ui/apple-cards-carousel'
+import FilterMenu from '../../components/FilterMenu'
+import { AnimatePresence } from 'motion/react'
+
+const CollectionsPage = () => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [error, setError] = useState(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [pagination, setPagination] = useState({ total: 0, limit: 10, offset: 0, totalPages: 1 });
+    const [hasMore, setHasMore] = useState(true);
+    const observer = useRef();
+
+    // Get URL parameters
+    const [searchParams] = useSearchParams();
+    const params = useParams();
+
+    // Initialize filters from URL parameters
+    const [selectedFilters, setSelectedFilters] = useState({
+        brand: '',
+        category: '',
+        concept: '',
+        material: '',
+        color: ''
+    });
+
+    // Effect to handle URL parameter changes
+    useEffect(() => {
+        const urlCategory = searchParams.get('category');
+        const collectionType = params['*']; // This captures the dynamic part after /collections/
+
+        let categoryValue = '';
+
+        // Handle specific collection routes
+        if (collectionType === 'new-release') {
+            categoryValue = 'new-release';
+        } else if (urlCategory) {
+            categoryValue = urlCategory;
+        }
+
+        // Update filters based on URL
+        setSelectedFilters(prev => ({
+            ...prev,
+            category: categoryValue,
+            brand: searchParams.get('brand') || '',
+            concept: searchParams.get('concept') || '',
+            material: searchParams.get('material') || '',
+            color: searchParams.get('color') || ''
+        }));
+
+        // Set search term if present in URL
+        const urlSearch = searchParams.get('search');
+        if (urlSearch) {
+            setSearchTerm(urlSearch);
+        }
+    }, [searchParams, params]);
+
+    // Fetch collections data with pagination
+    const fetchCollections = useCallback(async (offset = 0, reset = false) => {
+        try {
+            if (reset) {
+                setLoading(true);
+                setError(null);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const url = new URL(api.getUrl('collections'));
+            url.searchParams.append('offset', offset.toString());
+            url.searchParams.append('limit', pagination.limit.toString());
+
+            // Add search param if it exists
+            if (searchTerm.trim()) {
+                url.searchParams.append('search', searchTerm.trim());
+            }
+
+            // Add filter params - map frontend filter names to backend expected names
+            Object.entries(selectedFilters).forEach(([key, value]) => {
+                if (value) {
+                    // Map category filter to the backend expected parameter name
+                    const paramName = key === 'category' ? 'category' : key;
+                    url.searchParams.append(paramName, value);
+                }
+            });
+
+            const req = await fetch(url.toString());
+            const response = await req.json();
+
+            if (req.ok) {
+                const { data: newData, pagination: newPagination, success } = response;
+                // if (success && newData) {
+                if (newData) {
+                    if (reset) {
+                        setData(newData);
+                    } else {
+                        setData(prev => [...prev, ...newData]);
+                    }
+                    setPagination(newPagination);
+                    setHasMore(newData.length === newPagination.limit && offset + newData.length < newPagination.total);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } else {
+                throw new Error(response.message || 'Failed to fetch collections');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            setError(error.message);
+            if (reset) setData([]);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [searchTerm, selectedFilters, pagination.limit]);
+
+    // Initial load
+    useEffect(() => {
+        fetchCollections(0, true);
+    }, []);
+
+    // Reset and reload when filters change
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchCollections(0, true);
+        }, 300); // Debounce search
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, selectedFilters]);
+
+    // Infinite scroll ref callback
+    const lastWatchElementRef = useCallback(node => {
+        if (loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                fetchCollections(data.length, false);
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [loadingMore, hasMore, data.length, fetchCollections]);
+
+    // Filter and search logic (now handled server-side, but keeping for immediate UI feedback)
+    const filteredData = useMemo(() => {
+        return data; // Data is already filtered server-side
+    }, [data]);
+
+    const handleSearch = (value) => {
+        setSearchTerm(value);
+    };
+
+    const handleFilterChange = (filterType, value) => {
+        setSelectedFilters(prev => ({
+            ...prev,
+            [filterType]: value
+        }));
+    };
+
+    const clearFilters = () => {
+        setSelectedFilters({
+            brand: '',
+            category: '',
+            concept: '',
+            material: '',
+            color: ''
+        });
+        setSearchTerm('');
+    };
+
+    // Get unique values for filter options from current data
+    const filterOptions = useMemo(() => ({
+        brands: [...new Set(data.map(item => item.brand?.name).filter(Boolean))],
+        categories: [...new Set(data.flatMap(item => item.categories?.map(c => c.category?.name) || []).filter(Boolean))],
+        concepts: [...new Set(data.flatMap(item => item.concepts?.map(c => c.concept?.name) || []).filter(Boolean))],
+        materials: [...new Set(data.flatMap(item => item.materials?.map(m => m.material?.name) || []).filter(Boolean))],
+        colors: [...new Set(data.flatMap(item => item.colors?.map(c => c.color?.name) || []).filter(Boolean))]
+    }), [data]);
+
+    // Dynamic hero text based on collection type
+    const getHeroContent = () => {
+        const collectionType = params['*'];
+        const categoryParam = searchParams.get('category');
+
+        if (collectionType === 'new-release') {
+            return {
+                header: 'New Release Collections',
+                subheader: 'Discover the latest timepieces from our newest arrivals'
+            };
+        } else if (categoryParam === 'for-women') {
+            return {
+                header: 'Women\'s Collections',
+                subheader: 'Elegant timepieces designed for the modern woman'
+            };
+        } else if (categoryParam === 'for-men') {
+            return {
+                header: 'Men\'s Collections',
+                subheader: 'Distinguished timepieces crafted for gentlemen'
+            };
+        } else {
+            return {
+                header: 'Curated Collections',
+                subheader: 'Discover exceptional timepieces from the world\'s finest manufacturers'
+            };
+        }
+    };
+
+    const heroContent = getHeroContent();
+
+    if (error) {
+        return (
+            <section className="container mx-auto py-24 px-4">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-4">Unable to Load Collections</h2>
+                    <p className="text-gray-600 mb-8">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </section>
+        );
+    }
+
+    return (
+        <>
+            <section>
+                <div className="container mx-auto py-24 px-4">
+                    {/* Hero Section */}
+                    <div className="mx-auto text-center">
+                        <HeroText
+                            classname="max-w-3xl mx-auto flex flex-col items-center justify-center"
+                            // header={category ? `${category} Collection` : 'Our collection'{}}
+                            header='Our Collection'
+                            cta={{
+                                variant: 'ghost',
+                                ctaText: "Explore our collection",
+                                href: '/collections'
+                            }}
+                        />
+                    </div>
+
+                    {/* Filter and Search Controls */}
+                    <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-16'>
+                        {/* Filter Toggle */}
+                        <button
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            className='flex items-center text-gray-700 hover:text-gray-900 transition-colors'
+                            aria-expanded={isFilterOpen}
+                            aria-controls="filter-panel"
+                        >
+                            <svg className='w-5 h-5 mr-2' fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <span>Filters {Object.values(selectedFilters).filter(Boolean).length > 0 && `(${Object.values(selectedFilters).filter(Boolean).length})`}</span>
+                        </button>
+
+                        <div className="relative flex items-center bg-transparent max-w-[300px] w-full sm:w-auto">
+                            <span className="absolute text-gray-500 pointer-events-none">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                // placeholder="Search for watches"
+                                placeholder="Search watches, brands, models..."
+                                className="pl-7 pr-4 py-2 w-full border-b-2 rounded-none focus:outline-none focus:ring-blue-500 bg-transparent focus:border-slate-600 text-white"
+                                value={searchTerm}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filter Panel - Updated to include category filter */}
+                    {isFilterOpen && (
+                        // <div id="filter-panel" className="mt-6 p-6 bg-gray-900 rounded-lg">
+                        //     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        //         {/* Category Filter */}
+                        //         <div>
+                        //             <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                        //             <select
+                        //                 value={selectedFilters.category}
+                        //                 onChange={(e) => handleFilterChange('category', e.target.value)}
+                        //                 className="w-full p-2 bg-gray-800 border border-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        //             >
+                        //                 <option value="">All Categories</option>
+                        //                 <option value="new-release">New Releases</option>
+                        //                 <option value="for-women">For Women</option>
+                        //                 <option value="for-men">For Men</option>
+                        //                 {filterOptions.categories.map(category => (
+                        //                     <option key={category} value={category}>{category}</option>
+                        //                 ))}
+                        //             </select>
+                        //         </div>
+
+                        //         {/* Brand Filter */}
+                        //         <div>
+                        //             <label className="block text-sm font-medium text-gray-300 mb-2">Brand</label>
+                        //             <select
+                        //                 value={selectedFilters.brand}
+                        //                 onChange={(e) => handleFilterChange('brand', e.target.value)}
+                        //                 className="w-full p-2 bg-gray-800 border border-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        //             >
+                        //                 <option value="">All Brands</option>
+                        //                 {filterOptions.brands.map(brand => (
+                        //                     <option key={brand} value={brand}>{brand}</option>
+                        //                 ))}
+                        //             </select>
+                        //         </div>
+
+                        //         {/* Concept Filter */}
+                        //         <div>
+                        //             <label className="block text-sm font-medium text-gray-300 mb-2">Concept</label>
+                        //             <select
+                        //                 value={selectedFilters.concept}
+                        //                 onChange={(e) => handleFilterChange('concept', e.target.value)}
+                        //                 className="w-full p-2 bg-gray-800 border border-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        //             >
+                        //                 <option value="">All Concepts</option>
+                        //                 {filterOptions.concepts.map(concept => (
+                        //                     <option key={concept} value={concept}>{concept}</option>
+                        //                 ))}
+                        //             </select>
+                        //         </div>
+
+                        //         {/* Material Filter */}
+                        //         <div>
+                        //             <label className="block text-sm font-medium text-gray-300 mb-2">Material</label>
+                        //             <select
+                        //                 value={selectedFilters.material}
+                        //                 onChange={(e) => handleFilterChange('material', e.target.value)}
+                        //                 className="w-full p-2 bg-gray-800 border border-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        //             >
+                        //                 <option value="">All Materials</option>
+                        //                 {filterOptions.materials.map(material => (
+                        //                     <option key={material} value={material}>{material}</option>
+                        //                 ))}
+                        //             </select>
+                        //         </div>
+
+                        //         {/* Color Filter */}
+                        //         <div>
+                        //             <label className="block text-sm font-medium text-gray-300 mb-2">Colour</label>
+                        //             <select
+                        //                 value={selectedFilters.color}
+                        //                 onChange={(e) => handleFilterChange('color', e.target.value)}
+                        //                 className="w-full p-2 bg-gray-800 border border-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        //             >
+                        //                 <option value="">All Colours</option>
+                        //                 {filterOptions.colors.map(color => (
+                        //                     <option key={color} value={color}>{color}</option>
+                        //                 ))}
+                        //             </select>
+                        //         </div>
+                        //     </div>
+
+                        //     {/* Clear Filters */}
+                        //     {Object.values(selectedFilters).some(Boolean) && (
+                        //         <div className="mt-4">
+                        //             <button
+                        //                 onClick={clearFilters}
+                        //                 className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                        //             >
+                        //                 Clear All Filters
+                        //             </button>
+                        //         </div>
+                        //     )}
+                        // </div>
+
+                        // <FilterMenu isOpen={isFilterOpen} setIsOpen={setIsFilterOpen} handleSearch={handleSearch} searchTerm={searchTerm}/>
+                        // <AnimatePresence>
+                        //     {isFilterOpen && (
+                        //         <FilterMenu
+                        //             isOpen={isFilterOpen}
+                        //             setIsOpen={setIsFilterOpen}
+                        //             filterOptions={filterOptions}
+                        //             selectedFilters={selectedFilters}
+                        //             handleFilterChange={handleFilterChange}
+                        //             clearFilters={clearFilters}
+                        //         />
+                        //     )}
+                        // </AnimatePresence>
+
+                        ''
+                    )}
+
+                    {/* Results Summary */}
+                    <div className="mt-8 text-sm text-gray-400">
+                        {loading ? (
+                            "Loading collections..."
+                        ) : (
+                            `Showing ${filteredData.length} of ${pagination.total} collections`
+                        )}
+                    </div>
+
+                    {/* Collections Grid */}
+                    <div className="mt-8">
+                        {loading ? (
+                            <div className="flex justify-center items-center py-20">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            </div>
+                        ) : filteredData.length === 0 ? (
+                            <div className="text-center py-20">
+                                <h3 className="text-xl font-semibold text-gray-300 mb-2">No collections found</h3>
+                                <p className="text-gray-500 mb-4">
+                                    {searchTerm || Object.values(selectedFilters).some(Boolean)
+                                        ? "Try adjusting your search or filters"
+                                        : "Collections will appear here once available"}
+                                </p>
+                                {(searchTerm || Object.values(selectedFilters).some(Boolean)) && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-blue-400 hover:text-blue-300 font-medium"
+                                    >
+                                        Clear all filters
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="lg:mt-16">
+                                    <div className="flex flex-col md:flex-row flex-wrap gap-5 justify-center items-center">
+
+                                        {filteredData.map((item, index) => {
+                                            const isLast = index === filteredData.length - 1;
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    ref={isLast ? lastWatchElementRef : null}
+                                                    className="transform hover:scale-105 transition-transform duration-200"
+                                                >
+                                                    <Card
+                                                        index={index}
+                                                        card={item}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                </div>
+
+                                {/* Loading More Indicator */}
+                                {loadingMore && (
+                                    <div className="flex justify-center items-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-400">Loading more watches...</span>
+                                    </div>
+                                )}
+
+                                {/* End of Results */}
+                                {!hasMore && filteredData.length > 0 && (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-500">You've seen all available watches</p>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* {
+                <AnimatePresence>
+                    isFilterOpen && (
+                    <FilterMenu
+                        filterOptions={filterOptions}
+                        selectedFilters={selectedFilters}
+                        handleFilterChange={handleFilterChange}
+                        clearFilters={clearFilters}
+                    />
+                    )
+                </AnimatePresence>
+            } */}
+
+            <AnimatePresence>
+                {isFilterOpen && (
+                    <FilterMenu
+                        isOpen={isFilterOpen}
+                        setIsOpen={setIsFilterOpen}
+                        filterOptions={filterOptions}
+                        selectedFilters={selectedFilters}
+                        handleFilterChange={handleFilterChange}
+                        clearFilters={clearFilters}
+                    />
+                )}
+            </AnimatePresence>
+        </>
+    )
+}
+
+export default CollectionsPage;
