@@ -46,6 +46,7 @@ const HeroText = ({
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
+                    color: '#ffffff', // Fallback color
                     transitionDelay: '200ms'
                 }}
             >
