@@ -258,7 +258,7 @@ const Home = () => {
                     </motion.div>
                 </div>
 
-                <div className="section-container">
+                <div className="section-containe">
                     <motion.div
                         variants={adjustedVariants.picks || baseSectionVariants}
                         viewport={{ once: true, amount: 0.3, margin: "0px 0px -50px 0px" }}
@@ -270,7 +270,7 @@ const Home = () => {
                     </motion.div>
                 </div>
 
-                <div className="section-container">
+                <div className="section-containe">
                     <motion.div
                         variants={adjustedVariants.brands || baseSectionVariants}
                         viewport={{ once: true, amount: 0.3, margin: "0px 0px -50px 0px" }}
