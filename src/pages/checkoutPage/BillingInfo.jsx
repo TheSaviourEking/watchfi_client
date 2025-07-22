@@ -1,6 +1,6 @@
 import { useCheckout } from '@/hooks/useCheckout';
 
-const BillingInfo = () => {
+const BillingInfo = ({ handlePrevious = null }) => {
     const { billingData } = useCheckout();
     const { name, phone, address, city, country } = billingData;
 
@@ -16,7 +16,7 @@ const BillingInfo = () => {
             </div>
 
             <div className="mt-4">
-                <button className='underline'>Edit</button>
+                <button onClick={handlePrevious} className='underline'>Edit</button>
             </div>
         </div >
     )

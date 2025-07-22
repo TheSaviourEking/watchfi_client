@@ -1,5 +1,4 @@
 import { useCheckout } from '@/hooks/useCheckout';
-import { COUNTRIES, CITIES } from '@/lib/constants';
 import { cn } from '../../lib/utils';
 import { Country, State, City } from 'country-state-city';
 import BillingInfo from './BillingInfo';

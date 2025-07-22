@@ -12,7 +12,7 @@ import { formatCurrency } from '../../lib/utils';
 
 const serverUrl = `${import.meta.env.VITE_BACKEND_URL}`;
 
-const PaymentStep = ({ cart, totalPrice }) => {
+const PaymentStep = ({ cart, totalPrice, handleNext = null }) => {
     const { connection } = useConnection();
     const { publicKey, signTransaction } = useWallet();
     const [isProcessing, setIsProcessing] = useState(false);
@@ -355,6 +355,10 @@ const CryptoForm = ({
     const handleSubmit = (e) => {
         e.preventDefault(); // Prevent default form submission
         handlePayment(); // Call the payment function
+
+        if (paymentStatus === 'success') {
+            handleNext(4)
+        }
     }
 
     console.log(orderData, 'orderData', paymentMethod, 'Payment Method', userTokenAccounts, 'User Accounts', publicKey, 'Public key', prices, 'PRICES')
