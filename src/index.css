@@ -1,3 +1,4 @@
+@import url('fonts.css');
 @import '@solana/wallet-adapter-react-ui/styles.css';
 
 @tailwind base;
@@ -11,7 +12,8 @@ html {
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  /* font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif; */
+  font-family: 'Clash Grotesk Variable', sans-serif;
   overflow: hidden;
   /* background-color: #000; */
 }
