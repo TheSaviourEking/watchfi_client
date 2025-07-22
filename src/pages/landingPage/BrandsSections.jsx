@@ -16,7 +16,7 @@ const BrandsSection = () => {
                         {items.map((item, index) => (
                             <div
                                 key={index}
-                                className="px-6 py-3 text-white rounded-full whitespace-nowrap mx-2 text-9xl"
+                                className="px-6 py-3 text-white rounded-full whitespace-nowrap mx-2 text-7xl"
                             >
                                 {item}
                             </div>

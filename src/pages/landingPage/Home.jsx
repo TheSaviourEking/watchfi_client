@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import Hero from './Hero';
 import AuthenticitySection from './AuthencitySections';
