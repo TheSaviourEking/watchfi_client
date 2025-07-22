@@ -45,7 +45,7 @@ const HeroText = ({
                     background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    // WebkitTextFillColor: 'transparent',
                     color: '#ffffff', // Fallback color
                     transitionDelay: '200ms'
                 }}
