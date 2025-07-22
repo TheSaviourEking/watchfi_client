@@ -13,11 +13,11 @@ export default function Hero() {
     const heroRef = useRef(null);
 
     const images = [
-        "https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg",
-        "https://images.pexels.com/photos/277390/pexels-photo-277390.jpeg",
-        "https://images.pexels.com/photos/1697214/pexels-photo-1697214.jpeg",
-        "https://images.pexels.com/photos/1034063/pexels-photo-1034063.jpeg",
-        "https://images.pexels.com/photos/1697215/pexels-photo-1697215.jpeg"
+        "/Hero/pexels-photo-190819.jpeg",
+        "/Hero/pexels-photo-277390.jpeg",
+        "/Hero/pexels-photo-1034063.jpeg",
+        "/Hero/pexels-photo-1697214.jpeg",
+        "/Hero/pexels-photo-1697215.jpeg"
     ];
 
     // Mouse tracking for parallax effects
@@ -110,8 +110,8 @@ export default function Hero() {
                     <div
                         key={imageUrl}
                         className={`absolute inset-0 transition-all duration-2000 ease-in-out ${index === currentSlide
-                                ? 'opacity-100 scale-100'
-                                : 'opacity-0 scale-110'
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 scale-110'
                             }`}
                         style={{
                             transform: `scale(${index === currentSlide ? 1 + mousePosition.x * 0.02 : 1.1}) 
