@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Upload, Search, Filter, Eye } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('all');
 
   // Mock API URL - replace with your Fastify API endpoint
-  const API_BASE = 'http://localhost:3000/api';
+  const API_BASE = 'http://localhost:5000/api/v1';
 
   // Simulated data for demonstration
   useEffect(() => {
@@ -45,7 +45,7 @@ const AdminDashboard = () => {
         { id: '1', name: 'Classic', createdAt: new Date().toISOString() },
         { id: '2', name: 'Modern', createdAt: new Date().toISOString() }
       ],
-      watches: [
+      collections: [
         {
           id: '1',
           name: 'Submariner',
@@ -70,7 +70,8 @@ const AdminDashboard = () => {
     { key: 'colors', label: 'Colors', icon: '🎨' },
     { key: 'materials', label: 'Materials', icon: '⚙️' },
     { key: 'concepts', label: 'Concepts', icon: '💡' },
-    { key: 'watches', label: 'Watches', icon: '⌚' },
+    // { key: 'watches', label: 'Watches', icon: '⌚' },
+    { key: 'collections', label: 'Watches', icon: '⌚' },
     { key: 'customers', label: 'Customers', icon: '👥' },
     { key: 'bookings', label: 'Bookings', icon: '📋' }
   ];
@@ -78,6 +79,7 @@ const AdminDashboard = () => {
   const handleSubmit = async (formData) => {
     try {
       if (editingItem) {
+        console.log('Update intem')
         // Update existing item
         const response = await fetch(`${API_BASE}/${activeTab}/${editingItem.id}`, {
           method: 'PUT',
@@ -94,6 +96,7 @@ const AdminDashboard = () => {
           }));
         }
       } else {
+        console.log("New Item")
         // Create new item
         const response = await fetch(`${API_BASE}/${activeTab}`, {
           method: 'POST',
@@ -246,7 +249,10 @@ const AdminDashboard = () => {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
-            <h1 className="text-3xl font-bold text-gray-900">Watch Admin Dashboard</h1>
+            <div className="flex items-baseline gap-3">
+              <img src='/logo.svg' alt="Logo" className="h-10 w-10 rounded-full" />
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            </div>
             <p className="mt-2 text-gray-600">Manage your watch inventory and orders</p>
           </div>
         </div>
@@ -261,8 +267,8 @@ const AdminDashboard = () => {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 ${activeTab === tab.key
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <span>{tab.icon}</span>
