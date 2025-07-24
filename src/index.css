@@ -87,10 +87,12 @@ body {
   }
 
   .text-heading {
-    @apply font-light leading-[100%] tracking-[-2%] text-white;
-    @apply text-base sm:text-lg md:text-xl lg:text-2xl;
-    @apply leading-tight sm:leading-snug md:leading-normal;
-    @apply tracking-tight sm:tracking-normal;
+    /* @apply font-light leading-[100%] tracking-[-2%] text-white; */
+    /* @apply text-base sm:text-lg md:text-xl lg:text-2xl; */
+    /* @apply leading-tight sm:leading-snug md:leading-normal; */
+    /* @apply tracking-tight sm:tracking-normal; */
+    @apply text-white;
+    @apply text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light leading-tight tracking-tight transition-all duration-1000 ease-out;
   }
 
   .subText,
