@@ -39,7 +39,7 @@ const HeroText = ({
         >
             {/* Header with staggered animation */}
             <h1
-                className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light leading-tight tracking-tight transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
                     }`}
                 style={{
                     background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)',
