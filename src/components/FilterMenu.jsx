@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import React, { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilters, handleFilterChange, clearFilters }) => {
     const [dropdowns, setDropdowns] = useState({
@@ -113,7 +114,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('category')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-[80px] leading-none flex items-center'>Category</span>
+                                            <span className='text-heading leading-none flex items-center'>Category</span>
                                             {dropdowns.category ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -194,7 +195,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('brand')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-[80px] leading-none flex items-center'>Brand</span>
+                                            <span className='text-heading leading-none flex items-center'>Brand</span>
                                             {dropdowns.brand ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -415,21 +416,35 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                 </motion.ul>
 
 
-                                {/* Clear Filters */}
-                                {Object.values(selectedFilters).some(Boolean) && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.8, duration: 0.4 }}
-                                    >
-                                        <button
-                                            onClick={clearFilters}
-                                            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                <div className="flex gap-3 items-center justify-cente">
+                                    {/* Clear Filters */}
+                                    {Object.values(selectedFilters).some(Boolean) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.8, duration: 0.4 }}
                                         >
-                                            Clear All Filters
+                                            <button
+                                                onClick={clearFilters}
+                                                className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                            >
+                                                Clear All Filters
+                                            </button>
+                                        </motion.div>
+                                    )}
+
+                                    {/* Close Button */}
+                                    <div className="absolut bottom-6 right-6 z-20">
+                                        <button
+                                            onClick={handleCloseMenu}
+                                            className="p-2 rounded-full flex gap-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                                            aria-label="Close menu"
+                                        >
+                                            <span>Search</span>
+                                            <Search className="w-6 h-6" />
                                         </button>
-                                    </motion.div>
-                                )}
+                                    </div>
+                                </div>
 
                                 {/* Divider */}
                                 <motion.div

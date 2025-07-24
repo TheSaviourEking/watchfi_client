@@ -94,7 +94,7 @@ const NavMenu = ({ isOpen, setIsOpen = () => { } }) => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="fixed inset-0 z-[20000] w-full h-screen rounded-lg"
+                    className="fixed inset-0 z-[20000] w-full h-screen rounded-lg bg-black"
                 >
                     {/* Background overlay */}
                     <motion.div
