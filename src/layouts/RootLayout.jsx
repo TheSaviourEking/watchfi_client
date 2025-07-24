@@ -2,6 +2,7 @@ import { Outlet } from 'react-router'
 import Footer from './Footer'
 import Navbar from './Navbar'
 import { CheckoutProvider } from '../context/CheckoutContext'
+import { Toaster } from "@/components/ui/sonner"
 
 const RootLayout = () => {
     return (
@@ -9,9 +10,10 @@ const RootLayout = () => {
             <div className="font-clash">
                 <CheckoutProvider>
                     <Navbar />
-                    <main className='flex-1 min-h-screen'>
+                    <main>
                         <Outlet />
                     </main>
+                    <Toaster />
                     <Footer />
                 </CheckoutProvider >
             </div>
@@ -19,4 +21,4 @@ const RootLayout = () => {
     )
 }
 
-export default RootLayout
+export default RootLayout;
