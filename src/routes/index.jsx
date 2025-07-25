@@ -8,13 +8,14 @@ import checkoutRoute from "./checkout.route";
 import wishlistRoute from "./wishlist.route";
 import cartRoute from "./cart.route";
 import { ScrollToTop } from "../components/ScrollToTop";
+import NotFoundPage from "../pages/otherPages/NotFoundPage";
 
 const publicRoutes = [
     ...homeRoute,
     ...collectionRoute,
     ...checkoutRoute,
     ...wishlistRoute,
-    ...cartRoute
+    ...cartRoute,
 ]
 
 const protectedRoutes = [
@@ -51,6 +52,8 @@ const router = () => {
                 <Route path="/" element={<DashboardLayout />}>
                     {renderRoutes(protectedRoutes, true)}
                 </Route>
+
+                <Route path="/*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
     )
