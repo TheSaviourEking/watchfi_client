@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Upload, Search, Filter, Eye } from 'lucide-react';
+import axios from 'axios';
+import { toast } from "sonner"
+import api from '../../config/apiConfig';
 
 const AdminDashboard = () => {
+  // const [activeTab, setActiveTab] = useState('brands');
   const [activeTab, setActiveTab] = useState('brands');
   const [data, setData] = useState({
     brands: [],
@@ -9,7 +13,7 @@ const AdminDashboard = () => {
     colors: [],
     materials: [],
     concepts: [],
-    watches: [],
+    collections: [],
     customers: [],
     bookings: []
   });
@@ -21,48 +25,87 @@ const AdminDashboard = () => {
   // Mock API URL - replace with your Fastify API endpoint
   const API_BASE = 'http://localhost:5000/api/v1';
 
-  // Simulated data for demonstration
   useEffect(() => {
-    // In real implementation, fetch data from your API
-    setData({
-      brands: [
-        { id: '1', name: 'Rolex', logoUrl: 'https://example.com/rolex.png', createdAt: new Date().toISOString() },
-        { id: '2', name: 'Omega', logoUrl: 'https://example.com/omega.png', createdAt: new Date().toISOString() }
-      ],
-      categories: [
-        { id: '1', name: 'Luxury', createdAt: new Date().toISOString() },
-        { id: '2', name: 'Sport', createdAt: new Date().toISOString() }
-      ],
-      colors: [
-        { id: '1', name: 'Silver', hex: '#C0C0C0', createdAt: new Date().toISOString() },
-        { id: '2', name: 'Gold', hex: '#FFD700', createdAt: new Date().toISOString() }
-      ],
-      materials: [
-        { id: '1', name: 'Stainless Steel', createdAt: new Date().toISOString() },
-        { id: '2', name: 'Titanium', createdAt: new Date().toISOString() }
-      ],
-      concepts: [
-        { id: '1', name: 'Classic', createdAt: new Date().toISOString() },
-        { id: '2', name: 'Modern', createdAt: new Date().toISOString() }
-      ],
-      collections: [
-        {
-          id: '1',
-          name: 'Submariner',
-          price: 8500,
-          referenceCode: 'REF-001',
-          description: 'Iconic diving watch',
-          primaryPhotoUrl: 'https://example.com/submariner.jpg',
-          brandId: '1',
-          stockQuantity: 5,
-          isAvailable: true,
-          createdAt: new Date().toISOString()
-        }
-      ],
-      customers: [],
-      bookings: []
-    });
+    const fetchData = async () => {
+      try {
+        const [
+          collectionsResponse,
+          customersResponse
+        ] = await Promise.all([
+          axios.get(api.getUrl('collections')),
+          axios.get(api.getUrl('customers')),
+        ]);
+
+        console.log(collectionsResponse.data, customersResponse.data);
+
+        setData(prevData => ({
+          ...prevData,
+          collections: collectionsResponse.data.data,
+          customers: customersResponse.data.data,
+        }));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast('Failed to fetch data. Please try again later.');
+
+        setData({
+          brands: [],
+          categories: [],
+          colors: [],
+          materials: [],
+          concepts: [],
+          collections: [],
+          customers: [],
+          bookings: []
+        });
+      }
+    };
+
+    fetchData();
   }, []);
+
+
+  // Simulated data for demonstration
+  // useEffect(() => {
+  //   // In real implementation, fetch data from your API
+  //   setData({
+  //     brands: [
+  //       { id: '1', name: 'Rolex', logoUrl: 'https://example.com/rolex.png', createdAt: new Date().toISOString() },
+  //       { id: '2', name: 'Omega', logoUrl: 'https://example.com/omega.png', createdAt: new Date().toISOString() }
+  //     ],
+  //     categories: [
+  //       { id: '1', name: 'Luxury', createdAt: new Date().toISOString() },
+  //       { id: '2', name: 'Sport', createdAt: new Date().toISOString() }
+  //     ],
+  //     colors: [
+  //       { id: '1', name: 'Silver', hex: '#C0C0C0', createdAt: new Date().toISOString() },
+  //       { id: '2', name: 'Gold', hex: '#FFD700', createdAt: new Date().toISOString() }
+  //     ],
+  //     materials: [
+  //       { id: '1', name: 'Stainless Steel', createdAt: new Date().toISOString() },
+  //       { id: '2', name: 'Titanium', createdAt: new Date().toISOString() }
+  //     ],
+  //     concepts: [
+  //       { id: '1', name: 'Classic', createdAt: new Date().toISOString() },
+  //       { id: '2', name: 'Modern', createdAt: new Date().toISOString() }
+  //     ],
+  //     collections: [
+  //       {
+  //         id: '1',
+  //         name: 'Submariner',
+  //         price: 8500,
+  //         referenceCode: 'REF-001',
+  //         description: 'Iconic diving watch',
+  //         primaryPhotoUrl: 'https://example.com/submariner.jpg',
+  //         brandId: '1',
+  //         stockQuantity: 5,
+  //         isAvailable: true,
+  //         createdAt: new Date().toISOString()
+  //       }
+  //     ],
+  //     customers: [],
+  //     bookings: []
+  //   });
+  // }, []);
 
   const tabs = [
     { key: 'brands', label: 'Brands', icon: '🏷️' },
@@ -138,6 +181,7 @@ const AdminDashboard = () => {
     }
   };
 
+  console.log('active tab', activeTab, data[activeTab], 'Lets go')
   const filteredData = data[activeTab].filter(item => {
     const matchesSearch = Object.values(item).some(value =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
@@ -145,7 +189,8 @@ const AdminDashboard = () => {
 
     let matchesFilter = true;
     if (filterStatus !== 'all') {
-      if (activeTab === 'watches') {
+      // if (activeTab === 'watches') {
+      if (activeTab === 'collections') {
         matchesFilter = filterStatus === 'available' ? item.isAvailable : !item.isAvailable;
       } else if (activeTab === 'bookings') {
         matchesFilter = item.status === filterStatus;
@@ -166,7 +211,10 @@ const AdminDashboard = () => {
               {editingItem ? 'Edit' : 'Add New'} {activeTab.slice(0, -1)}
             </h3>
             <button
-              onClick={() => { setShowForm(false); setEditingItem(null); }}
+              onClick={() => {
+                setShowForm(false);
+                setEditingItem(null);
+              }}
               className="text-gray-500 hover:text-gray-700"
             >
               ✕
@@ -182,6 +230,8 @@ const AdminDashboard = () => {
             colors={data.colors}
             materials={data.materials}
             concepts={data.concepts}
+            setShowForm={setShowForm}
+            setEditingItem={setEditingItem}
           />
         </div>
       </div>
@@ -217,7 +267,10 @@ const AdminDashboard = () => {
                   ))}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
-                      onClick={() => { setEditingItem(item); setShowForm(true); }}
+                      onClick={() => {
+                        setEditingItem(item);
+                        setShowForm(true);
+                      }}
                       className="text-indigo-600 hover:text-indigo-900"
                     >
                       <Edit className="w-4 h-4" />
@@ -338,8 +391,9 @@ const AdminDashboard = () => {
 };
 
 // Form Component
-const FormComponent = ({ type, initialData, onSubmit, brands, categories, colors, materials, concepts }) => {
+const FormComponent = ({ type, initialData, onSubmit, brands, categories, colors, materials, concepts, setShowForm = null, setEditingItem = null }) => {
   const [formData, setFormData] = useState(initialData || {});
+  console.log("in ofrm")
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -463,7 +517,10 @@ const FormComponent = ({ type, initialData, onSubmit, brands, categories, colors
       <div className="flex justify-end space-x-3 pt-4 border-t">
         <button
           type="button"
-          onClick={() => { setShowForm(false); setEditingItem(null); }}
+          onClick={() => {
+            setShowForm(false);
+            setEditingItem(null);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Cancel
@@ -547,7 +604,7 @@ const getFormFields = (type, options) => {
     concepts: [
       { key: 'name', label: 'Concept Name', type: 'text', required: true }
     ],
-    watches: [
+    collections: [
       { key: 'name', label: 'Watch Name', type: 'text', required: true },
       { key: 'referenceCode', label: 'Reference Code', type: 'text', required: true },
       { key: 'price', label: 'Price', type: 'number', step: '0.01', required: true },
