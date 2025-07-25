@@ -6,6 +6,7 @@ const getApiBaseUrl = () => {
 
 const api = {
     baseURL: getApiBaseUrl(),
+    
     endpoints: {
         collections: '/api/v1/collections',
         collectionDetails: '/api/v1/collections/',
@@ -14,6 +15,7 @@ const api = {
         bookings: '/api/vi/bookings',
         verifyBookings: '/api/v1/bookings/verify'
     },
+
     getUrl: function (endpoint, param = '') {
         // console.log(`${this.baseURL}${this.endpoints[endpoint]}${param}`);
         return `${this.baseURL}${this.endpoints[endpoint]}${param}`;
