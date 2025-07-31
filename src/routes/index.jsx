@@ -49,7 +49,7 @@ const router = () => {
                 </Route>
 
                 {/* Dashboard Layout */}
-                <Route path="/" element={<DashboardLayout />}>
+                <Route path="/admin" element={<DashboardLayout />}>
                     {renderRoutes(protectedRoutes, true)}
                 </Route>
 

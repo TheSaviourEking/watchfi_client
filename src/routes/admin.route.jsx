@@ -1,23 +1,34 @@
-import AdminDashboard from "../pages/adminPage/AdminDashboard";
-import Dashboard from "../pages/adminPage/Dashboard";
-import NewAdminDashboard from "../pages/adminPage/NewAdminDashboard";
+import AddWatchPage from "../pages/adminPage/products/add/AddWatchPage";
+import EditWatch from "../pages/adminPage/products/edit/EditWatchPage";
+import ProductsPage from "../pages/adminPage/products/ProductsPage";
 
 const adminRoute = [
+    // {
+    //     path: '/admin/dashboard',
+    //     component: '',
+    //     isProtected: true
+    // },
     {
-        path: '/superuser',
-        component: AdminDashboard,
+        path: 'products',
+        component: ProductsPage,
         isProtected: true
     },
     {
-        path: '/admin',
-        component: NewAdminDashboard,
+        path: 'products/add',
+        component: AddWatchPage,
         isProtected: true
     },
     {
-        path: '/admin/debar',
-        component: Dashboard,
+        path: 'products/:id/edit',
+        // path: 'products/edit/:id',
+        component: EditWatch,
         isProtected: true
-    }
+    },
+    {
+        path: '*',
+        component: <div>Finished</div>,
+        isProtected: true
+    },
 ]
 
 export default adminRoute;
