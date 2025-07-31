@@ -153,7 +153,7 @@ const NavMenu = ({ isOpen, setIsOpen = () => { } }) => {
                                         >
                                             <Link
                                                 onClick={handleCloseMenu}
-                                                className='text-heading capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
+                                                className='text-heading-menu capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
                                                 to={category.href}
                                             >
                                                 {category.name}
@@ -190,7 +190,7 @@ const NavMenu = ({ isOpen, setIsOpen = () => { } }) => {
                                         >
                                             <Link
                                                 onClick={handleCloseMenu}
-                                                className='text-heading capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
+                                                className='text-heading-menu capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
                                                 to={companyOption.href}
                                             >
                                                 {companyOption.name}

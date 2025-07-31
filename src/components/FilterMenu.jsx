@@ -85,7 +85,18 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                         {/* Scrollable Content */}
                         <div className="h-full overflow-y-auto overflow-x-hidden">
                             {/* Close Button */}
-                            <div className="absolute bottom-6 right-6 z-20">
+                            {/* <div className="absolute bottom-6 right-6 z-20">
+                                <button
+                                    onClick={handleCloseMenu}
+                                    className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                                    aria-label="Close menu"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div> */}
+
+                            {/* Close button */}
+                            <div className="absolute top-6 right-6 z-20">
                                 <button
                                     onClick={handleCloseMenu}
                                     className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
@@ -114,7 +125,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('category')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-heading leading-none flex items-center'>Category</span>
+                                            <span className='text-heading-menu leading-none flex items-center'>Category</span>
                                             {dropdowns.category ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -195,7 +206,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('brand')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-heading leading-none flex items-center'>Brand</span>
+                                            <span className='text-heading-menu leading-none flex items-center'>Brand</span>
                                             {dropdowns.brand ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -242,7 +253,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('concept')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-heading leading-none flex items-center'>Concept</span>
+                                            <span className='text-heading-menu leading-none flex items-center'>Concept</span>
                                             {dropdowns.concept ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -290,7 +301,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('material')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-heading leading-none flex items-center'>Material</span>
+                                            <span className='text-heading-menu leading-none flex items-center'>Material</span>
                                             {dropdowns.material ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -338,7 +349,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             onClick={() => toggleDropdown('color')}
                                             className="flex items-center gap-20 capitalize py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white w-full text-left"
                                         >
-                                            <span className='text-heading leading-none flex items-center'>Color</span>
+                                            <span className='text-heading-menu leading-none flex items-center'>Color</span>
                                             {dropdowns.color ? (
                                                 <ChevronDown className="ml-aut w-10 h-10 transition-transform duration-200 self-center" />
                                             ) : (
@@ -406,7 +417,7 @@ const FilterMenu = ({ isOpen, setIsOpen = () => { }, filterOptions, selectedFilt
                                             >
                                                 <Link
                                                     onClick={handleCloseMenu}
-                                                    className='text-heading capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
+                                                    className='text-heading-menu capitalize block py-3 px-2 rounded-lg transition-all duration-300 hover:bg-gray-900/50 hover:translate-x-2 hover:text-white'
                                                     to={category.href}
                                                 >
                                                     {category.name}
