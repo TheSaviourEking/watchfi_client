@@ -36,7 +36,7 @@ function ActionCell({ watch }) {
 
     const handleEdit = () => {
         console.log('Editing watch:', watch.id);
-        navigate(`/admin/products/edit/${watch.id}`);
+        navigate(`/admin/products/${watch.id}/edit`);
     };
 
     const handleView = () => {
