@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Link } from "react-router";
+import { Share2, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import useCartStore from "../../store/cart.store";
 
 const HeroText = ({ classname, reference, header, text, cta: { variant, ctaText, href } }) => {
@@ -43,13 +45,55 @@ const HeroText = ({ classname, reference, header, text, cta: { variant, ctaText,
 
 const CollectionsDetailsHero = (props) => {
     // console.log(props, 'DETAIL')
-    const { name, description, image, referenceCode, detail } = props.collection;
+    const { name, description, image, referenceCode, detail, primaryPhotoUrl } = props.collection;
     const addToCart = useCartStore(state => state.addToCart);
+    const [copied, setCopied] = useState(false);
 
     const handleAddToCart = () => {
         addToCart(props.collection);
         console.log(props.collection)
     }
+
+    const handleShare = async () => {
+        const currentUrl = window.location.href;
+
+        // Check if the Web Share API is supported
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: name,
+                    text: `Check out this ${name} watch - ${description}`,
+                    url: currentUrl,
+                });
+            } catch (error) {
+                // If sharing is cancelled or fails, fall back to copy
+                handleCopyUrl();
+            }
+        } else {
+            // Fallback to copying URL to clipboard
+            handleCopyUrl();
+        }
+    };
+
+    const handleCopyUrl = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+            console.error('Failed to copy URL:', error);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = window.location.href;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     return (
         <section className='bg-black/[58] bg-cover bg-center bg-no-repeat'
             style={{
@@ -75,7 +119,7 @@ const CollectionsDetailsHero = (props) => {
                                 <p style={{ whiteSpace: 'pre-line', marginTop: '1rem' }}>{description + '\n' + detail}</p>
                             )
                         }
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <Link to={'/checkout'}>
                                 <Button className="mt-8" variant={'default'}>
                                     {"Buy Now"}
@@ -86,6 +130,23 @@ const CollectionsDetailsHero = (props) => {
                                 onClick={handleAddToCart}
                                 className="mt-8 invert" variant={'default'}>
                                 {"Add To Cart"}
+                            </Button>
+
+                            <Button
+                                onClick={handleShare}
+                                className="mt-8 bg-transparent border border-white text-white hover:bg-white hover:text-black transition-colors"
+                                variant={'outline'}>
+                                {copied ? (
+                                    <>
+                                        <Check className="w-4 h-4 mr-2" />
+                                        {"Copied!"}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Share2 className="w-4 h-4 mr-2" />
+                                        {"Share"}
+                                    </>
+                                )}
                             </Button>
 
                             {/* <Button
@@ -100,7 +161,7 @@ const CollectionsDetailsHero = (props) => {
                     <div className="lg:basis1/3 flex justifycenter h-full max-h-[700px]">
                         <img
                             className="h-full w-full object-contain"
-                            src={image}
+                            src={primaryPhotoUrl}
                             // width={1000}
                             // height={1000}
                             alt="Luxury titanium watch from Royal Oak Offshore collection"

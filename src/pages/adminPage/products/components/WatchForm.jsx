@@ -50,7 +50,7 @@ const SpecificationSchema = z.object({
 
 const PhotoSchema = z.object({
     id: z.string().optional(),
-    photoUrl: z.string().url().optional(),
+    photoUrl: z.string().url().optional().or(z.literal("")).or(z.undefined()),
     altText: z.string().max(255, { message: "Alt text must be at most 255 characters" }).optional(),
     order: z.number().int().min(0, { message: "Order must be a non-negative integer" }),
 });
@@ -239,20 +239,25 @@ function FileField({
     const [previews, setPreviews] = useState([]);
 
     useEffect(() => {
-        if (typeof window === "undefined" || !files || !("length" in files)) return;
+        console.log(`FileField (${name}): files=`, files);
+        if (typeof window === "undefined" || !files || !("length" in files)) {
+            setPreviews([]);
+            return;
+        }
         const fileArray = Array.from(files);
         const newPreviews = fileArray.map((file) => URL.createObjectURL(file));
         setPreviews(newPreviews);
         return () => {
             newPreviews.forEach((url) => URL.revokeObjectURL(url));
         };
-    }, [files]);
+    }, [files, name]);
 
     const handleFileChange = (event) => {
         const newFiles = event.target.files;
+        console.log(`FileField (${name}): New files selected:`, newFiles);
         if (newFiles && newFiles.length > 0) {
             if (multiple) {
-                const existingFiles = files ? Array.from(files) : [];
+                const existingFiles = files && "length" in files ? Array.from(files) : [];
                 const newFilesArray = Array.from(newFiles);
                 const dt = new DataTransfer();
                 existingFiles.forEach((file) => dt.items.add(file));
@@ -261,11 +266,12 @@ function FileField({
                 if (orderName) {
                     const currentData = watch(orderName) || [];
                     const newData = newFilesArray.map((_, index) => ({
-                        photoUrl: "",
+                        photoUrl: undefined,
                         altText: "",
                         order: currentData.length + index,
                     }));
                     setValue(orderName, [...currentData, ...newData]);
+                    console.log(`FileField (${name}): Updated ${orderName}:`, [...currentData, ...newData]);
                 }
             } else {
                 setValue(name, newFiles);
@@ -273,6 +279,8 @@ function FileField({
                     setValue(altTextName, "");
                 }
             }
+        } else {
+            console.log(`FileField (${name}): No files selected, keeping current value`);
         }
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -280,15 +288,17 @@ function FileField({
     };
 
     const handleRemoveImage = (index) => {
-        if (!files) return;
+        if (!files || !("length" in files)) return;
         const fileArray = Array.from(files);
         const updatedFiles = fileArray.filter((_, i) => i !== index);
         const dt = new DataTransfer();
         updatedFiles.forEach((file) => dt.items.add(file));
         setValue(name, dt.files);
+        console.log(`FileField (${name}): Removed file at index ${index}, new files:`, dt.files);
         if (orderName) {
             const currentData = watch(orderName) || [];
             setValue(orderName, currentData.filter((_, i) => i !== index));
+            console.log(`FileField (${name}): Updated ${orderName} after removal:`, currentData.filter((_, i) => i !== index));
         }
     };
 
@@ -299,6 +309,7 @@ function FileField({
         }
         if (orderName) {
             setValue(orderName, []);
+            console.log(`FileField (${name}): Cleared all files and ${orderName}`);
         }
     };
 
@@ -776,98 +787,56 @@ export default function WatchForm({
     const [materialOptions, setMaterialOptions] = useState([]);
     const [isLoadingBrands, setIsLoadingBrands] = useState(true);
     const [isLoadingRelations, setIsLoadingRelations] = useState(true);
-    const [removedImages, setRemovedImages] = useState({
-        primary: false,
-        secondary: [],
-    });
+    const [existingPrimaryUrl, setExistingPrimaryUrl] = useState([]);
+    const [existingSecondaryUrls, setExistingSecondaryUrls] = useState([]);
+    const [specifications, setSpecifications] = useState([]);
 
     const form = useForm({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            name: watchData?.name || "",
-            referenceCode: watchData?.referenceCode || "",
-            description: watchData?.description || "",
-            detail: watchData?.detail ? JSON.stringify(watchData.detail) : "",
-            price: watchData?.price || 0,
-            stockQuantity: watchData?.stockQuantity || 0,
-            isAvailable: watchData?.isAvailable ?? true,
-            deletedAt: watchData?.deletedAt || null,
-            brandId: watchData?.brandId || "",
+            name: "",
+            referenceCode: "",
+            description: "",
+            detail: "",
+            price: 0,
+            stockQuantity: 0,
+            isAvailable: true,
+            deletedAt: null,
+            brandId: "",
             newBrand: "",
             newBrandDescription: "",
-            logoInputType: "", // Ensure controlled state
+            logoInputType: undefined,
             newBrandLogoFile: null,
             newBrandLogoUrl: "",
-            colors: watchData?.colors?.map(c => c.colorId) || [],
+            colors: [],
             newColors: [],
-            categories: watchData?.categories?.map(c => c.categoryId) || [],
+            categories: [],
             newCategories: [],
-            concepts: watchData?.concepts?.map(c => c.conceptId) || [],
+            concepts: [],
             newConcepts: [],
-            materials: watchData?.materials?.map(m => m.materialId) || [],
+            materials: [],
             newMaterials: [],
-            specifications: watchData?.specificationHeadings?.map(s => ({
-                id: s.id,
-                heading: s.heading || "",
-                description: s.description || "",
-                specificationOptions: s.specificationPoints?.map(p => ({
-                    id: p.id,
-                    label: p.label || "",
-                    value: p.value || "",
-                })) || [{ label: "", value: "" }],
-            })) || [],
+            specifications: [],
             primaryPhoto: null,
-            primaryPhotoAltText: watchData?.primaryPhotoUrl ? "Primary watch image" : "",
+            primaryPhotoAltText: "",
             secondaryPhotos: null,
-            secondaryPhotosData: watchData?.photos?.map(p => ({
-                id: p.id,
-                photoUrl: p.photoUrl,
-                altText: p.altText || "",
-                order: p.order,
-            })) || [],
-            existingPrimaryUrl: watchData?.primaryPhotoUrl || "",
-            existingSecondaryUrls: watchData?.photos?.map(p => ({
-                id: p.id,
-                photoUrl: p.photoUrl,
-                altText: p.altText || "",
-                order: p.order,
-            })) || [],
+            secondaryPhotosData: [],
+            existingPrimaryUrl: "",
+            existingSecondaryUrls: [],
             removedImages: { primary: false, secondary: [] },
         },
     });
 
     const { watch, setValue, handleSubmit, register, formState: { errors }, reset } = form;
     const selectedBrand = watch("brandId") || "";
-    const logoInputType = watch("logoInputType") || "";
-    const [specifications, setSpecifications] = useState(
-        watchData?.specificationHeadings?.map(s => ({
-            id: s.id,
-            heading: s.heading || "",
-            description: s.description || "",
-            specificationOptions: s.specificationPoints?.map(p => ({
-                id: p.id,
-                label: p.label || "",
-                value: p.value || "",
-            })) || [{ label: "", value: "" }],
-        })) || []
-    );
-    const [existingPrimaryUrl, setExistingPrimaryUrl] = useState(
-        watchData?.primaryPhotoUrl ? [watchData.primaryPhotoUrl] : []
-    );
-    const [existingSecondaryUrls, setExistingSecondaryUrls] = useState(
-        watchData?.photos?.map(p => ({
-            id: p.id,
-            photoUrl: p.photoUrl,
-            altText: p.altText || "",
-            order: p.order,
-        })) || []
-    );
+    const logoInputType = watch("logoInputType");
 
     useEffect(() => {
         async function fetchRelations() {
             try {
                 setIsLoadingBrands(true);
                 setIsLoadingRelations(true);
+                console.log("Fetching relations from API...");
                 const [brandsRes, colorsRes, categoriesRes, conceptsRes, materialsRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/api/v1/brands`),
                     fetch(`${API_BASE_URL}/api/v1/colors`),
@@ -877,7 +846,7 @@ export default function WatchForm({
                 ]);
 
                 if (!brandsRes.ok || !colorsRes.ok || !categoriesRes.ok || !conceptsRes.ok || !materialsRes.ok) {
-                    throw new Error("Failed to fetch data");
+                    throw new Error(`Failed to fetch data: ${[brandsRes.status, colorsRes.status, categoriesRes.status, conceptsRes.status, materialsRes.status].join(", ")}`);
                 }
 
                 const [brands, colors, categories, concepts, materials] = await Promise.all([
@@ -887,6 +856,8 @@ export default function WatchForm({
                     conceptsRes.json(),
                     materialsRes.json(),
                 ]);
+
+                console.log("Fetched relations:", { brands, colors, categories, concepts, materials });
 
                 setBrandOptions([
                     ...brands.map((brand) => ({
@@ -923,7 +894,7 @@ export default function WatchForm({
                 );
             } catch (error) {
                 console.error("Error fetching relations:", error);
-                toast.error("Failed to load relations. Please try again.");
+                toast.error(`Failed to load relations: ${error.message}. Please try again.`);
             } finally {
                 setIsLoadingBrands(false);
                 setIsLoadingRelations(false);
@@ -943,28 +914,28 @@ export default function WatchForm({
 
     useEffect(() => {
         if (watchData) {
-            reset({
+            const defaultValues = {
                 name: watchData.name || "",
                 referenceCode: watchData.referenceCode || "",
                 description: watchData.description || "",
                 detail: watchData.detail ? JSON.stringify(watchData.detail) : "",
-                price: watchData.price || 0,
+                price: parseFloat(watchData.price) || 0,
                 stockQuantity: watchData.stockQuantity || 0,
                 isAvailable: watchData.isAvailable ?? true,
-                deletedAt: watchData.deletedAt || null,
-                brandId: watchData.brandId || "",
+                deletedAt: watchData.deletedAt ? new Date(watchData.deletedAt) : null,
+                brandId: watchData.brand?.id || "",
                 newBrand: "",
                 newBrandDescription: "",
-                logoInputType: "",
+                logoInputType: undefined,
                 newBrandLogoFile: null,
                 newBrandLogoUrl: "",
-                colors: watchData.colors?.map(c => c.colorId) || [],
+                colors: watchData.colors?.map(c => c.color.id) || [],
                 newColors: [],
-                categories: watchData.categories?.map(c => c.categoryId) || [],
+                categories: watchData.categories?.map(c => c.category.id) || [],
                 newCategories: [],
-                concepts: watchData.concepts?.map(c => c.conceptId) || [],
+                concepts: watchData.concepts?.map(c => c.concept.id) || [],
                 newConcepts: [],
-                materials: watchData.materials?.map(m => m.materialId) || [],
+                materials: watchData.materials?.map(m => m.material.id) || [],
                 newMaterials: [],
                 specifications: watchData.specificationHeadings?.map(s => ({
                     id: s.id,
@@ -993,17 +964,11 @@ export default function WatchForm({
                     order: p.order,
                 })) || [],
                 removedImages: { primary: false, secondary: [] },
-            });
-            setSpecifications(watchData.specificationHeadings?.map(s => ({
-                id: s.id,
-                heading: s.heading || "",
-                description: s.description || "",
-                specificationOptions: s.specificationPoints?.map(p => ({
-                    id: p.id,
-                    label: p.label || "",
-                    value: p.value || "",
-                })) || [{ label: "", value: "" }],
-            })) || []);
+            };
+
+            console.log("Setting default values for edit mode:", defaultValues);
+            reset(defaultValues);
+            setSpecifications(defaultValues.specifications);
             setExistingPrimaryUrl(watchData.primaryPhotoUrl ? [watchData.primaryPhotoUrl] : []);
             setExistingSecondaryUrls(watchData.photos?.map(p => ({
                 id: p.id,
@@ -1011,38 +976,45 @@ export default function WatchForm({
                 altText: p.altText || "",
                 order: p.order,
             })) || []);
-            setRemovedImages({ primary: false, secondary: [] });
+        } else {
+            console.log("Add mode: Ensuring primaryPhoto and secondaryPhotos are null");
+            setValue("primaryPhoto", null);
+            setValue("secondaryPhotos", null);
+            setValue("secondaryPhotosData", []);
         }
-    }, [watchData, reset]);
+    }, [watchData, reset, setValue]);
 
     useEffect(() => {
-        if (selectedBrand === "other") {
-            if (logoInputType === "file") {
-                setValue("newBrandLogoUrl", "");
-            } else if (logoInputType === "url") {
-                setValue("newBrandLogoFile", null);
-            }
-        } else {
+        if (isEdit && watchData?.brand?.id) {
+            console.log("Edit mode detected with brandId:", watchData.brand.id, "Ensuring logoInputType is undefined");
+            setValue("logoInputType", undefined);
+            console.log("logoInputType after edit mode reset:", form.getValues("logoInputType"));
+        }
+    }, [isEdit, watchData, setValue, form]);
+
+    useEffect(() => {
+        console.log("brandId changed:", selectedBrand, "logoInputType before reset:", logoInputType);
+        if (selectedBrand !== "other") {
+            console.log("Resetting new brand fields as brandId is not 'other'");
             setValue("newBrand", "");
             setValue("newBrandDescription", "");
-            setValue("logoInputType", "");
+            setValue("logoInputType", undefined);
             setValue("newBrandLogoFile", null);
             setValue("newBrandLogoUrl", "");
+            console.log("logoInputType after reset:", form.getValues("logoInputType"));
         }
-    }, [selectedBrand, setValue]);
+    }, [selectedBrand, setValue, form, logoInputType]);
 
     const handleSpecificationsUpdate = (newSpecs) => {
+        console.log("Updating specifications:", newSpecs);
         setSpecifications(newSpecs);
         setValue("specifications", newSpecs);
     };
 
     const handleRemoveExistingImage = (fieldName, url) => {
+        console.log(`Removing existing image: ${fieldName}, URL: ${url}`);
         if (fieldName === "primaryPhoto") {
             setExistingPrimaryUrl([]);
-            setRemovedImages((prev) => ({
-                ...prev,
-                primary: !!watchData?.primaryPhotoUrl,
-            }));
             setValue("existingPrimaryUrl", "");
             setValue("removedImages", {
                 primary: !!watchData?.primaryPhotoUrl,
@@ -1053,10 +1025,6 @@ export default function WatchForm({
                 const newUrls = prev.filter((photo) => photo.photoUrl !== url);
                 return newUrls;
             });
-            setRemovedImages((prev) => ({
-                ...prev,
-                secondary: [...new Set([...prev.secondary, url])],
-            }));
             setValue("existingSecondaryUrls", existingSecondaryUrls.filter((photo) => photo.photoUrl !== url));
             setValue("removedImages", {
                 primary: removedImages.primary,
@@ -1066,6 +1034,7 @@ export default function WatchForm({
     };
 
     const handleUpdatePhotoData = (index, field, value) => {
+        console.log(`Updating photo data: index=${index}, field=${field}, value=${value}`);
         const currentData = watch("secondaryPhotosData") || [];
         const updatedData = [...currentData];
         updatedData[index] = { ...updatedData[index], [field]: value };
@@ -1073,6 +1042,7 @@ export default function WatchForm({
     };
 
     const createColor = async (name) => {
+        console.log(`Creating color: ${name}`);
         const response = await fetch(`${API_BASE_URL}/api/v1/colors`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1088,6 +1058,7 @@ export default function WatchForm({
     };
 
     const createCategory = async (name) => {
+        console.log(`Creating category: ${name}`);
         const response = await fetch(`${API_BASE_URL}/api/v1/categories`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1103,6 +1074,7 @@ export default function WatchForm({
     };
 
     const createConcept = async (name) => {
+        console.log(`Creating concept: ${name}`);
         const response = await fetch(`${API_BASE_URL}/api/v1/concepts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1118,6 +1090,7 @@ export default function WatchForm({
     };
 
     const createMaterial = async (name) => {
+        console.log(`Creating material: ${name}`);
         const response = await fetch(`${API_BASE_URL}/api/v1/materials`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1133,38 +1106,67 @@ export default function WatchForm({
     };
 
     async function onFormSubmit(data) {
-        console.log(data)
+        console.log("Form submission started with data:", data);
         setIsSubmitting(true);
         try {
             const formData = new FormData();
+            console.log("Preparing FormData...");
             Object.entries({
                 ...data,
                 id: watchData?.id,
-                detail: data.detail ? JSON.parse(data.detail) : undefined,
+                // detail: data.detail ? JSON.parse(data.detail) : undefined,
                 existingPrimaryUrl: existingPrimaryUrl[0] || undefined,
                 existingSecondaryUrls: JSON.stringify([...existingSecondaryUrls]),
                 removedImages: JSON.stringify({
-                    primary: removedImages.primary,
-                    secondary: [...new Set(removedImages.secondary)],
+                    primary: data.removedImages.primary,
+                    secondary: [...new Set(data.removedImages.secondary)],
                 }),
-                // brandId: data.brandId === "other" ? undefined : data.brandId,
                 brandId: data.brandId === "other" ? undefined : data.brandId,
                 newBrand: data.brandId === "other" ? data.newBrand || "" : undefined,
                 newBrandDescription: data.brandId === "other" ? data.newBrandDescription : undefined,
+                logoInputType: data.brandId === "other" ? data.logoInputType : undefined,
             }).forEach(([key, value]) => {
-                if (key === "primaryPhoto" && value) {
+                if (key === "primaryPhoto" && value && "length" in value && value.length > 0) {
+                    console.log(`Appending primaryPhoto: ${value.length} file(s)`);
                     Array.from(value).forEach((file) => formData.append(key, file));
-                } else if (key === "secondaryPhotos" && value) {
+                } else if (key === "primaryPhoto") {
+                    console.log(`Skipping primaryPhoto: invalid or empty value`, value);
+                }
+                if (key === "secondaryPhotos" && value && "length" in value && value.length > 0) {
+                    console.log(`Appending secondaryPhotos: ${value.length} file(s)`);
                     Array.from(value).forEach((file) => formData.append(key, file));
-                } else if (key === "newBrandLogoFile" && value && data.brandId === "other" && data.logoInputType === "file") {
+                } else if (key === "secondaryPhotos") {
+                    console.log(`Skipping secondaryPhotos: invalid or empty value`, value);
+                }
+                if (key === "newBrandLogoFile" && value && data.brandId === "other" && data.logoInputType === "file" && "length" in value) {
+                    console.log(`Appending newBrandLogoFile: ${value.length} file(s)`);
                     Array.from(value).forEach((file) => formData.append(key, file));
-                } else if (key === "newBrandLogoUrl" && data.brandId === "other" && data.logoInputType === "url") {
+                } else if (key === "newBrandLogoFile") {
+                    console.log(`Skipping newBrandLogoFile: invalid or not applicable`, value);
+                }
+                if (key === "newBrandLogoUrl" && data.brandId === "other" && data.logoInputType === "url") {
+                    console.log(`Appending newBrandLogoUrl: ${value}`);
                     formData.append(key, value || "");
-                } else if (value !== undefined && value !== null) {
+                } else if (key === "newBrandLogoUrl") {
+                    console.log(`Skipping newBrandLogoUrl: not applicable`);
+                }
+                if (key === "secondaryPhotosData" && value) {
+                    const cleanedData = value.map((photo) => ({
+                        ...photo,
+                        photoUrl: photo.photoUrl || undefined,
+                    }));
+                    console.log(`Appending secondaryPhotosData:`, cleanedData);
+                    formData.append(key, JSON.stringify(cleanedData));
+                }
+                if (value !== undefined && value !== null && (key !== "logoInputType" && key !== "primaryPhoto" && key !== "secondaryPhotos" && key !== "newBrandLogoFile" && key !== "newBrandLogoUrl" && key !== "secondaryPhotosData" || data.brandId === "other")) {
+                    console.log(`Appending ${key}:`, value);
                     formData.append(key, typeof value === "object" ? JSON.stringify(value) : value);
+                } else if (key !== "primaryPhoto" && key !== "secondaryPhotos" && key !== "newBrandLogoFile" && key !== "newBrandLogoUrl" && key !== "secondaryPhotosData") {
+                    console.log(`Skipping ${key}: value is undefined or null`);
                 }
             });
 
+            console.log(`Submitting to ${isEdit ? "PUT" : "POST"} ${API_BASE_URL}/api/v1/collections${isEdit ? `/${watchData.id}` : ""}`);
             const response = await fetch(isEdit ? `${API_BASE_URL}/api/v1/collections/${watchData.id}` : `${API_BASE_URL}/api/v1/collections`, {
                 method: isEdit ? "PUT" : "POST",
                 body: formData,
@@ -1172,11 +1174,13 @@ export default function WatchForm({
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to submit form");
+                console.error("API response error:", errorData);
+                throw new Error(errorData.error || `Failed to submit form: ${response.status}`);
             }
 
-            await response.json();
-            setRemovedImages({ primary: false, secondary: [] });
+            const result = await response.json();
+            console.log("API response success:", result);
+
             setValue("removedImages", { primary: false, secondary: [] });
             toast.success(isEdit ? "Watch updated successfully." : "Watch created successfully.");
             onSubmit();
@@ -1187,18 +1191,51 @@ export default function WatchForm({
                     if (err.path.includes("specifications")) {
                         return "Please add at least one specification with valid details.";
                     }
+                    if (err.path.includes("secondaryPhotosData")) {
+                        return `Secondary photos data: ${err.message} at index ${err.path[1] || "unknown"}`;
+                    }
+                    if (err.path.includes("primaryPhoto")) {
+                        return `Primary photo: ${err.message}`;
+                    }
                     return `${err.path.join(".")}: ${err.message}`;
                 });
-                toast.error(errorMessages.join("; "), { duration: 5000 });
+                toast.error(`Validation errors: ${errorMessages.join("; ")}`, { duration: 5000 });
             } else if (error.message?.includes("Unique constraint")) {
                 toast.error("Name or reference code already exists. Please use unique values.", { duration: 5000 });
             } else {
-                toast.error(`An unexpected error occurred: ${error.message}`, { duration: 5000 });
+                toast.error(`Submission failed: ${error.message}`, { duration: 5000 });
             }
         } finally {
             setIsSubmitting(false);
+            console.log("Form submission completed");
         }
     }
+
+    const handleSubmitClick = () => {
+        console.log("Submit button clicked, form state:", form.getValues());
+        handleSubmit(
+            (data) => {
+                console.log("handleSubmit triggered with validated data:", data);
+                onFormSubmit(data);
+            },
+            (errors) => {
+                console.error("Validation errors:", errors);
+                const errorMessages = Object.entries(errors).map(([field, error]) => {
+                    if (field === "specifications" && !isEdit) {
+                        return "Please add at least one specification with valid details.";
+                    }
+                    if (field === "secondaryPhotosData") {
+                        return `Secondary photos data: ${error.message || "Invalid data"}`;
+                    }
+                    if (field === "primaryPhoto") {
+                        return `Primary photo: ${error.message || "Invalid file"}`;
+                    }
+                    return `${field}: ${error.message || "Invalid input"}`;
+                });
+                toast.error(`Form validation failed: ${errorMessages.join("; ")}`, { duration: 5000 });
+            }
+        )();
+    };
 
     if (isLoadingBrands || isLoadingRelations) {
         return <div className="text-center py-4">Loading form data...</div>;
@@ -1215,19 +1252,11 @@ export default function WatchForm({
                         <p className="text-sm text-muted-foreground mt-1">
                             {isEdit
                                 ? "Edit the watch details below. Click save when you're done."
-                                : "Add a new watch here. You must add at least one specification by clicking 'Add Specification' before submitting."}
+                                : "Add a new watch here. You must add at least one specification and a primary photo before submitting."}
                         </p>
                     </div>
                     <div className="p-6">
-                        {/* <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6"> */}
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                console.log("Form submitted manually");
-                                onFormSubmit(form.getValues());
-                            }}
-                            className="space-y-6"
-                        >
+                        <div className="space-y-6">
                             <div className="grid gap-4">
                                 <TextField
                                     name="name"
@@ -1343,8 +1372,11 @@ export default function WatchForm({
                                         <div className="grid gap-3">
                                             <Label>Brand Logo</Label>
                                             <RadioGroup
-                                                value={logoInputType}
-                                                onValueChange={(value) => setValue("logoInputType", value)}
+                                                value={logoInputType || ""}
+                                                onValueChange={(value) => {
+                                                    console.log("Setting logoInputType to:", value || undefined);
+                                                    setValue("logoInputType", value || undefined);
+                                                }}
                                                 className="flex gap-4"
                                             >
                                                 <div className="flex items-center space-x-2">
@@ -1480,14 +1512,15 @@ export default function WatchForm({
                                     Cancel
                                 </Button>
                                 <Button
-                                    type="submit"
+                                    type="button"
+                                    onClick={handleSubmitClick}
                                     disabled={isSubmitting || isLoadingBrands || isLoadingRelations}
                                     aria-label="Save changes"
                                 >
                                     {isSubmitting ? "Saving..." : isEdit ? "Update Watch" : "Create Watch"}
                                 </Button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>

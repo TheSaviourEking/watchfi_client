@@ -6,14 +6,16 @@ import { Card, Carousel } from '../../components/ui/apple-cards-carousel'
 import useCartStore from '../../store/cart.store'
 import { Button } from '../../components/ui/button'
 import { ArrowRight } from 'lucide-react'
+import { toast } from 'sonner'
 
 const CartPage = () => {
     const [data, setData] = useState([]);
-    const cart = useCartStore(state => state.cart);
+    // const cart = useCartStore(state => state.cart);
     const clearCart = useCartStore(state => state.clearCart);
     const getTotalItems = useCartStore(state => state.getTotalItems);
     const getTotalPrice = useCartStore(state => state.getTotalPrice);
     const totalInCart = getTotalItems ? getTotalItems() : cart.length;
+    const { cart = [] } = useCartStore();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -36,9 +38,17 @@ const CartPage = () => {
     }, []);
 
     const handleClearCart = () => {
-        if (window.confirm('Are you sure you want to clear your cart?')) {
-            clearCart();
-        }
+        // if (window.confirm('Are you sure you want to clear your cart?')) {
+        //     clearCart();
+        // }
+
+        toast("Are you sure you want to clear your cart?", {
+            description: "All Your Cart Items would be cleared!",
+            action: {
+                label: "Confirm",
+                onClick: () => clearCart(),
+            },
+        })
     };
 
     const handleCheckout = () => {
@@ -68,7 +78,7 @@ const CartPage = () => {
                         <HeroText
                             classname="max-w-3xl mx-auto"
                             // header={`Your Cart (${getTotalItems ? getTotalItems() : cart.length} items)`}
-                            header={`Your Cart (${totalInCart} ${totalInCart === 1 ? "item" : "items"})`}
+                            header={`Your Cart (${cart.length} ${cart.length === 1 ? "item" : "items"})`}
                             cta={{
                                 variant: 'ghost',
                                 ctaText: "Continue Shopping",
@@ -112,7 +122,7 @@ const CartPage = () => {
 
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-gray-600">
-                                    Total Items: {getTotalItems ? getTotalItems() : cart.length}
+                                    Total Items: {cart.length}
                                 </span>
                                 {getTotalPrice && (
                                     <span className="text-xl font-bold">

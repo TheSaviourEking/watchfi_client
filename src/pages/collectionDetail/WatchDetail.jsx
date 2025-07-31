@@ -61,7 +61,7 @@ const WatchDetails = ({ specifications, photos }) => {
                 </div>
             </div>
 
-            <div className="container">
+            <div className="container text-white">
                 <h2 className="mb-10 text-heading">SPECIFICATIONS</h2>
 
                 {specifications && Array.isArray(specifications) && specifications.length > 0 ? (
