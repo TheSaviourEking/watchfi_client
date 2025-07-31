@@ -301,7 +301,7 @@ export const Card = ({
               layoutId={layout ? `category-${card.description}` : undefined}
               className="text-left flex justify-between  px-2 text-sm font-medium w-full text-white md:text-base">
               <span>${card.price}</span>
-              <span>{'ee'}</span>
+              {/* <span>{'ee'}</span> */}
             </motion.p>
           </Link>
         </div>
