@@ -108,7 +108,7 @@ const CollectionsPage = () => {
             });
 
             const req = await fetch(url.toString());
-        
+
             const response = await req.json();
 
             if (req.ok && response.success) {
@@ -286,6 +286,7 @@ const CollectionsPage = () => {
         <>
             <section>
                 <div className="container mx-auto py-24 px-4">
+                    <div className="py-10 lg:py-0"></div>
                     <div className="mx-auto text-center">
                         <HeroText
                             classname="max-w-3xl mx-auto flex flex-col items-center justify-center"
