@@ -23,8 +23,8 @@ const ProductsPage = () => {
         const fetchWatches = async () => {
             try {
                 // const response = await fetch('/api/v1/collections');
-                console.log(api.getUrl('collections'))
                 const response = await axios.get(api.getUrl('collections'));
+                console.log(response, 'RESPONSE')
                 if (response.status !== 200) {
                     throw new Error('Failed to fetch watches');
                 }

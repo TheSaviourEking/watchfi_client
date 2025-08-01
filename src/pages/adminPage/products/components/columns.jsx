@@ -184,10 +184,10 @@ export const columns = [
         ),
     },
     {
-        accessorKey: 'priceInCents',
+        accessorKey: 'price',
         header: 'Price',
         cell: ({ row }) => (
-            <div className="font-semibold">{formatPrice(row.original.priceInCents)}</div>
+            <div className="font-semibold">{formatPrice(row.original.price)}</div>
         ),
     },
     {

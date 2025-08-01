@@ -558,7 +558,7 @@ function MultiSelectField({
     };
 
     return (
-        <div className="grid gap-3">
+        <div className="grid gap-3 bg-black">
             <Label>{label}</Label>
             <Select
                 isMulti
@@ -569,9 +569,18 @@ function MultiSelectField({
                 }}
                 placeholder={placeholder || `Select ${label.toLowerCase()}`}
                 className="react-select-container"
+                classNames={{
+                    control: (state) => '!bg-black !text-white !border-gray-700',
+                    menu: (state) => '!bg-black',
+                    option: (state) => '!bg-black hover:!bg-gray-800',
+                    multiValue: (state) => '!bg-gray-700',
+                    multiValueLabel: (state) => '!text-white',
+                    singleValue: (state) => '!text-white',
+                }}
                 classNamePrefix="react-select"
                 noOptionsMessage={() => `No ${label.toLowerCase()} available`}
             />
+
             <div className="flex gap-2">
                 <Input
                     value={newOption}
@@ -1282,8 +1291,10 @@ export default function WatchForm({
                                 />
                                 <TextField
                                     name="detail"
-                                    label="Detail (Optional)"
-                                    placeholder='{"features": "Chronograph, Date"}'
+                                    // label="Detail (Optional)"
+                                    // placeholder='{"features": "Chronograph, Date"}' 
+                                    label="Detail"
+                                    placeholder='.....'
                                     as={Textarea}
                                     register={register}
                                     error={errors.detail}
