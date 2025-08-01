@@ -49,7 +49,7 @@ const Footer = () => {
 
     return (
         <section className='text-white'>
-            <div className="container py-12 lg:py-24">
+            <div className="container py-12 lg:py-24 px-5">
                 <div className="flex flex-col lg:flex-row">
                     <div className='flex-1 mb-5 lg:mb-0'>
                         <img src="/logo.svg" />

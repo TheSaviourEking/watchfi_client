@@ -2,6 +2,7 @@ import { useCheckout } from '@/hooks/useCheckout';
 import { button } from 'motion/react-client';
 import { Button } from '../../components/ui/button';
 import { Link } from 'react-router';
+import { formatCurrency } from '../../lib/formatters';
 
 export const OrderSummary = ({ cart = [], getTotalPrice = () => { }, currentStep = 0, totalSteps = 0, handleNext, validateStep }) => {
     // const { billingData, paymentMethod } = useCheckout();
@@ -47,7 +48,7 @@ export const OrderSummary = ({ cart = [], getTotalPrice = () => { }, currentStep
                         <thead>
                             <tr className="border-b border-gray-700">
                                 <th className="pb-2">Item</th>
-                                <th className="pb-2">Price</th>
+                                <th className="pb-2">Unit Price</th>
                                 <th className="pb-2">Savings</th>
                                 <th className="pb-2">Total</th>
                             </tr>
@@ -87,9 +88,9 @@ export const OrderSummary = ({ cart = [], getTotalPrice = () => { }, currentStep
                                     {/* Example Row: Product */}
                                     <tr className="border-b border-gray-800">
                                         <td className="py-4 text-gray-300">{item.name} <span className='text-xs bg-neutral-800 rounded-sm p-2 px-4'>x {item.quantity}</span></td>
-                                        <td className="py-4">${item.price}</td>
-                                        <td className="py-4">$0</td>
-                                        <td className="py-4 font-medium">${item.totalPrice}</td>
+                                        <td className="py-4">{formatCurrency(item.price)}</td>
+                                        <td className="py-4">{formatCurrency(0)}</td>
+                                        <td className="py-4 font-medium">{formatCurrency(item.totalPrice)}</td>
                                     </tr>
 
                                     {/* Optional: Add more rows here if needed */}
@@ -103,10 +104,10 @@ export const OrderSummary = ({ cart = [], getTotalPrice = () => { }, currentStep
                 )
             }
 
-            <div className="borde border-gray-600 pt-4">
+            <div className="border-gray-600 pt-4">
                 <div className="flex justify-between font-medium text-lg">
                     <span>Total Due Payment:</span>
-                    <span>${getTotalPrice()}</span>
+                    <span>{formatCurrency(getTotalPrice())}</span>
                 </div>
             </div>
 

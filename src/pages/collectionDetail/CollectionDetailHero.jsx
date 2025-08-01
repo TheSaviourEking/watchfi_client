@@ -93,6 +93,7 @@ const CollectionsDetailsHero = (props) => {
             setTimeout(() => setCopied(false), 2000);
         }
     };
+    console.log(detail, 'divider', description)
 
     return (
         <section className='bg-black/[58] bg-cover bg-center bg-no-repeat'
@@ -114,11 +115,27 @@ const CollectionsDetailsHero = (props) => {
                         }
 
                         {
+                            description && (
+                                // <p className="subText mt-4">{text}</p>
+                                <p style={{ whiteSpace: 'pre-line', marginTop: '1rem' }}>{description}</p>
+                            )
+                        }
+
+                        {
+                            detail && (
+                                // <p className="subText mt-4">{text}</p>
+                                <p style={{ whiteSpace: 'pre-line', marginTop: '.5rem' }}>{detail}</p>
+                            )
+                        }
+
+
+
+                        {/* {
                             description || '' + '\n' + detail || '' && (
                                 // <p className="subText mt-4">{text}</p>
                                 <p style={{ whiteSpace: 'pre-line', marginTop: '1rem' }}>{description + '\n' + detail}</p>
                             )
-                        }
+                        } */}
                         <div className="flex gap-4 flex-wrap">
                             <Link to={'/checkout'}>
                                 <Button className="mt-8" variant={'default'}>

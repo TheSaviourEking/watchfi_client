@@ -2,7 +2,7 @@ import { Outlet } from 'react-router'
 import Footer from './Footer'
 import Navbar from './Navbar'
 import { CheckoutProvider } from '../context/CheckoutContext'
-import { Toaster } from "@/components/ui/sonner"
+import { ErrorBoundary } from './ErrorBoundary'
 
 const RootLayout = () => {
     return (
@@ -10,10 +10,11 @@ const RootLayout = () => {
             <div className="font-clash">
                 <CheckoutProvider>
                     <Navbar />
-                    <main>
-                        <Outlet />
-                    </main>
-                    <Toaster />
+                    <ErrorBoundary>
+                        <main>
+                            <Outlet />
+                        </main>
+                    </ErrorBoundary>
                     <Footer />
                 </CheckoutProvider >
             </div>
