@@ -16,6 +16,7 @@ import { useOutsideClick } from "@/hooks/use-outside-click";
 import { HeartIcon } from "lucide-react";
 import useCartStore from "../../store/cart.store";
 import { Link } from "react-router";
+import { formatCurrency } from "../../lib/formatters";
 
 export const CarouselContext = createContext({
   // onCardClose: () => { },
@@ -299,8 +300,8 @@ export const Card = ({
 
             <motion.p
               layoutId={layout ? `category-${card.description}` : undefined}
-              className="text-left flex justify-between  px-2 text-sm font-medium w-full text-white md:text-base">
-              <span>${card.price}</span>
+              className="text-left flex justify-between  px-[0.5px] text-sm font-medium w-full text-white md:text-base">
+              <span>{formatCurrency(card.price)}</span>
               {/* <span>{'ee'}</span> */}
             </motion.p>
           </Link>
