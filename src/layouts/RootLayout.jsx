@@ -9,13 +9,16 @@ const RootLayout = () => {
         <>
             <div className="font-clash">
                 <CheckoutProvider>
-                    <Navbar />
-                    <ErrorBoundary>
-                        <main>
-                            <Outlet />
-                        </main>
-                    </ErrorBoundary>
-                    <Footer />
+                    <div className="flex flex-col min-h-screen w-full">
+                        <Navbar />
+                        <ErrorBoundary>
+                            <main className='flex-1'>
+                                 <div className="py-20 lg:py-0"></div>
+                                <Outlet />
+                            </main>
+                        </ErrorBoundary>
+                        <Footer />
+                    </div>
                 </CheckoutProvider >
             </div>
         </>

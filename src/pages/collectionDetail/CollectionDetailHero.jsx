@@ -101,6 +101,7 @@ const CollectionsDetailsHero = (props) => {
                 backgroundImage: `url(/WatchDetailsBackground.png)`
             }}
         >
+            <div className="py-20 lg:py-0"></div>
             <div className="h-screen w-full">
                 <div className="container flex flex-col lg:flex-row h-full w-full items-center gap-4">
 
@@ -175,7 +176,7 @@ const CollectionsDetailsHero = (props) => {
                     </div>
 
                     {/* Watch image */}
-                    <div className="lg:basis1/3 flex justifycenter h-full max-h-[700px]">
+                    <div className="lex justifycenter h-full lg:max-h-[700px]">
                         <img
                             className="h-full w-full object-contain"
                             src={primaryPhotoUrl}

@@ -8,7 +8,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createTransferInstruction, getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import axios from 'axios';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency } from '../../lib/formatters';
 
 const serverUrl = `${import.meta.env.VITE_BACKEND_URL}`;
 
