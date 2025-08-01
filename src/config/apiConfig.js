@@ -1,12 +1,14 @@
 const getApiBaseUrl = () => {
     return import.meta.env.PROD
-        ? import.meta.env.VITE_API_BASE_URL_PRODUCTION || 'https://watchfi-prod.onrender.com/'
-        : import.meta.env.VITE_API_BASE_URL_DEVELOPMENT || 'http://localhost:5000/';
+        // ? import.meta.env.VITE_API_BASE_URL_PRODUCTION || 'https://watchfi-prod.onrender.com/'
+        ? import.meta.env.VITE_API_BASE_URL_PRODUCTION || 'http://204.236.211.44/'
+        // : import.meta.env.VITE_API_BASE_URL_DEVELOPMENT || 'http://localhost:5000/';
+        : import.meta.env.VITE_API_BASE_URL_DEVELOPMENT || 'http://204.236.211.44/';
 };
 
 const api = {
     baseURL: getApiBaseUrl(),
-    
+
     endpoints: {
         collections: '/api/v1/collections',
         collectionDetails: '/api/v1/collections/',
