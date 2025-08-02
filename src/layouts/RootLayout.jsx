@@ -1,10 +1,21 @@
-import { Outlet } from 'react-router'
-import Footer from './Footer'
-import Navbar from './Navbar'
-import { CheckoutProvider } from '../context/CheckoutContext'
-import { ErrorBoundary } from './ErrorBoundary'
+import { useLocation } from 'react-router';
+import { Outlet } from 'react-router';
+import Footer from './Footer';
+import Navbar from './Navbar';
+import { CheckoutProvider } from '../context/CheckoutContext';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const RootLayout = () => {
+    const location = useLocation(); // Get the current location object
+    console.log('Current path:', location.pathname); // Log the current path
+
+    // Check if the current path is '/' or '/goat'
+    if (location.pathname === '/') {
+        console.log('Current path is /');
+    } else if (location.pathname === '/goat') {
+        console.log('Current path is /goat');
+    }
+
     return (
         <>
             <div className="font-clash">
@@ -13,16 +24,20 @@ const RootLayout = () => {
                         <Navbar />
                         <ErrorBoundary>
                             <main className='flex-1'>
-                                 <div className="py-20 lg:py-0"></div>
+                                {
+                                    location.pathname !== "/" ? (
+                                        <div className="py-20 lg:py-0"></div>
+                                    ) : ''
+                                }
                                 <Outlet />
                             </main>
                         </ErrorBoundary>
                         <Footer />
                     </div>
-                </CheckoutProvider >
+                </CheckoutProvider>
             </div>
         </>
-    )
+    );
 }
 
 export default RootLayout;
