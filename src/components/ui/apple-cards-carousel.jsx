@@ -267,7 +267,7 @@ export const Card = ({
             <div className="flex items-center justify-center">
               <button
                 onClick={handleOpen}
-                className={cn("bottom-0 w-full absolute h-8 bg-neutral-800 rounded-t-md group-hover:block hidden transition duration-300 w3/4", {
+                className={cn("bottom-0 w-full absolute h-8 bg-neutral-800 rounded-t-md group-hover:block hidden transition duration-300 text-white", {
                   'bg-pink-900': isInCart,
                   'block': isInCart
                 })}>
