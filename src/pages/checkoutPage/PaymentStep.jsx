@@ -9,8 +9,7 @@ import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana
 import { createTransferInstruction, getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import axios from 'axios';
 import { formatCurrency } from '../../lib/formatters';
-
-const serverUrl = `${import.meta.env.VITE_BACKEND_URL}`;
+import api from '../../config/apiConfig';
 
 const PaymentStep = ({ cart, totalPrice, handleNext = null }) => {
     const { connection } = useConnection();
@@ -275,7 +274,8 @@ const PaymentStep = ({ cart, totalPrice, handleNext = null }) => {
             alert('We here on booking creation');
 
             // 4. Create booking with real tx signature
-            const newBooking = await axios.post(`${serverUrl}/bookings`, {
+            // const newBooking = await axios.post(`${serverUrl}/bookings`, {
+            const newBooking = await axios.post(api.getUrl('bookings'), {
                 customerId: publicKey.toBase58(),
                 watchItems: cart,
                 discount: 0,
