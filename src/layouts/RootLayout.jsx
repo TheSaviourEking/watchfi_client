@@ -6,15 +6,7 @@ import { CheckoutProvider } from '../context/CheckoutContext';
 import { ErrorBoundary } from './ErrorBoundary';
 
 const RootLayout = () => {
-    const location = useLocation(); // Get the current location object
-    console.log('Current path:', location.pathname); // Log the current path
-
-    // Check if the current path is '/' or '/goat'
-    if (location.pathname === '/') {
-        console.log('Current path is /');
-    } else if (location.pathname === '/goat') {
-        console.log('Current path is /goat');
-    }
+    const location = useLocation();
 
     return (
         <>
