@@ -154,7 +154,6 @@ const PaymentStep = ({ cart, totalPrice, handleNext = null }) => {
                 senderWallet: publicKey.toBase58(),
                 paymentType: paymentMethod.toUpperCase(),
                 transactionHash: '99999r',
-                discount: 0
 
             });
 
